@@ -1,0 +1,76 @@
+# Unity generated folders - NEVER COMMIT THESE
+Library/
+Temp/
+obj/
+Build/
+Builds/
+Logs/
+UserSettings/
+MemoryCaptures/
+Recordings/
+
+# Unity generated files - NEVER COMMIT THESE
+*.pidb
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+*.tmp
+*.user
+*.userprefs
+*.booproj
+*.svd
+*.log
+*.dwlt
+
+# Unity project files
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.unitypackage
+*.app
+*.apk
+*.aab
+
+# Unity crash logs
+sysinfo.txt
+crashlytics-build.properties
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Unity package manager
+Assets/AssetStoreTools*
+
+# Unity editor specific
+Assets/Plugins/Editor/JetBrains*
+Assets/Plugins/Editor/Unity*
+
+# Unity LFS files that might cause issues
+*.meta.bak
+*.asset.bak
+*.prefab.bak
+
+# Additional Unity cache files
+Assets/StreamingAssets/aa.meta
+Assets/StreamingAssets/aa/*
+
+# Unity Addressables
+Assets/AddressableAssetsData/*/*.bin*
+
+# Unity generated meta files for ignored content
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+*.opendb.meta
+*.VC.db.meta 
