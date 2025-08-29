@@ -147,6 +147,15 @@ public class TrayHandle : MonoBehaviour
         else
             onTrayFullyOut?.Invoke();
 
+        // Also notify oven controller directly for all movements
+        if (ovenController != null)
+        {
+            if (IsInTray)
+                ovenController.OnTrayFullyIn();
+            else
+                ovenController.OnTrayFullyOut();
+        }
+
         // Notify morgue of movement completion (only for occupied trays)
         NotifyMorgueOfMovement(goingIn);
 

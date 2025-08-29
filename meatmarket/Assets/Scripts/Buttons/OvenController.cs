@@ -73,10 +73,18 @@ public class OvenController : MonoBehaviour
     {
         if (isOn) return;
         isOn = true;
-        Debug.Log("[OvenController] Oven turned ON");
+        Debug.Log($"[OvenController] Oven turned ON, isTrayIn = {isTrayIn}");
         OnOvenTurnedOn?.Invoke();
         // Only try to start burn if tray is in and conditions are met
-        if (isTrayIn) TryStartBurnIfPossible();
+        if (isTrayIn) 
+        {
+            Debug.Log("[OvenController] Tray is IN, attempting to start burn");
+            TryStartBurnIfPossible();
+        }
+        else
+        {
+            Debug.Log("[OvenController] Tray is OUT, burn will not start");
+        }
     }
 
     public void TurnOff()
@@ -99,6 +107,7 @@ public class OvenController : MonoBehaviour
     public void OnTrayFullyIn()
     {
         isTrayIn = true;
+        Debug.Log("[OvenController] Tray moved IN, isTrayIn = true");
         if (autoRefreshPlushieOnTrayIn)
             AutoFindPlushieOnSlot();
 
@@ -112,6 +121,7 @@ public class OvenController : MonoBehaviour
     public void OnTrayFullyOut()
     {
         isTrayIn = false;
+        Debug.Log("[OvenController] Tray moved OUT, isTrayIn = false");
     }
 
     /// <summary>
