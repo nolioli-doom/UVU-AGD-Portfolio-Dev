@@ -12,6 +12,8 @@ public class PurchaseUI : MonoBehaviour
     public OvenController oven;
     [Tooltip("Shock controller on this tray (we don't block it while blank, except during respawn).")]
     public ShockController shock;
+    [Tooltip("Morgue controller for mutex management.")]
+    public MorgueController morgueController;
 
     [Header("Buy UI")]
     [Tooltip("Root transform for the physical buy buttons (child object).")]
@@ -80,12 +82,26 @@ public class PurchaseUI : MonoBehaviour
     /// <summary>
     /// Wire this to OvenController.OnCooldownEnd.
     /// We treat 'successful incineration' as: Burn finished + Cooldown ended → tray unlocks.
-    /// At that moment: auto-pop OUT, disable oven button, and activate persistent Buy UI.
+    /// At that moment: force oven OFF, auto-pop OUT, disable oven button, and activate persistent Buy UI.
     /// </summary>
     public void OnOvenCooldownEnded_SuccessfulIncineration()
     {
         if (isRespawning) return; // safety
-        Debug.Log("[PurchaseUI] Burn+Cooldown complete → entering BlankReady, auto pop out");
+        Debug.Log("[PurchaseUI] Burn+Cooldown complete → forcing oven OFF, entering BlankReady, auto pop out");
+        
+        // Notify morgue that this tray is now BlankReady (exempt from mutex)
+        if (morgueController != null)
+        {
+            var ctx = GetTrayContext();
+            if (ctx != null)
+            {
+                morgueController.NotifyBlankReadyEnter(ctx);
+            }
+        }
+        
+        // Force oven OFF before entering blank state (no oven while tray is blank)
+        if (oven != null) oven.ForceInstantReset();
+        
         EnterBlankReady();
         AutoPopOut();
     }
@@ -122,6 +138,9 @@ public class PurchaseUI : MonoBehaviour
 
         Debug.Log($"[PurchaseUI] Buy option {prefabIndex} selected");
         OnBuySelected?.Invoke();
+
+        // Force oven reset before auto pull-in to ensure clean state
+        if (oven != null) oven.ForceInstantReset();
 
         // Hide UI immediately and begin auto pull-in + respawn lock
         HideBuyUi();
@@ -187,6 +206,16 @@ public class PurchaseUI : MonoBehaviour
         Debug.Log("[PurchaseUI] Auto pull-in started, respawn lock engaged");
         OnAutoPullInStart?.Invoke();
 
+        // Notify morgue that respawn is starting
+        if (morgueController != null)
+        {
+            var ctx = GetTrayContext();
+            if (ctx != null)
+            {
+                morgueController.NotifyRespawnStart(ctx);
+            }
+        }
+
         // Block all inputs during respawn window
         BeginGlobalLock();
 
@@ -216,6 +245,18 @@ public class PurchaseUI : MonoBehaviour
         isRespawning = false;
         EndGlobalLock();
         ExitBlankReady();
+        
+        // Notify morgue that respawn is complete and tray is now Occupied
+        if (morgueController != null)
+        {
+            var ctx = GetTrayContext();
+            if (ctx != null)
+            {
+                morgueController.NotifyRespawnComplete(ctx);
+                morgueController.NotifyBlankReadyExit(ctx);
+            }
+        }
+        
         Debug.Log("[PurchaseUI] Respawn complete, plushie spawned, returning to Occupied");
         OnRespawnComplete?.Invoke();
     }
@@ -327,5 +368,22 @@ public class PurchaseUI : MonoBehaviour
     private void SetEnabled(MonoBehaviour comp, bool enable)
     {
         if (comp != null) comp.enabled = enable;
+    }
+
+    /// <summary>
+    /// Get this tray's context from the morgue controller.
+    /// </summary>
+    private MorgueController.TrayContext GetTrayContext()
+    {
+        if (morgueController == null) return null;
+        
+        foreach (var ctx in morgueController.trays)
+        {
+            if (ctx.purchaseUI == this)
+            {
+                return ctx;
+            }
+        }
+        return null;
     }
 }

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3215681962010080285}
   - component: {fileID: 5469734050290143683}
   - component: {fileID: 2649595249209890126}
+  - component: {fileID: -1098554608323728213}
   m_Layer: 0
   m_Name: Dog
   m_TagString: Untagged
@@ -27,13 +28,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2867432814739582233}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!33 &3215681962010080285
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -110,3 +111,32 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-1098554608323728213
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2867432814739582233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f275d9d1679b4630be4fd9091d98637, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultParalyzeDuration: 2
+  burnDestroyDelay: 0.25
+  disableWhileParalyzed: []
+  collidersToDisableOnBurn: []
+  renderersToggleOnBurn: []
+  OnParalyzeStart:
+    m_PersistentCalls:
+      m_Calls: []
+  OnParalyzeEnd:
+    m_PersistentCalls:
+      m_Calls: []
+  OnBurned:
+    m_PersistentCalls:
+      m_Calls: []
+  OnDestroyed:
+    m_PersistentCalls:
+      m_Calls: []

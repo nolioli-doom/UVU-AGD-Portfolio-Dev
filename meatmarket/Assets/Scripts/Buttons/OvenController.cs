@@ -9,6 +9,8 @@ public class OvenController : MonoBehaviour
     public bool IsOn => isOn;
     public bool IsBurning { get; private set; }
     public bool IsCooling { get; private set; }
+    [SerializeField] private bool isTrayIn = false;  // Track if tray is in position
+    public bool IsTrayIn => isTrayIn;
 
     [Header("Timing (seconds)")]
     [Min(0.05f)] public float burnDuration = 2.0f;
@@ -50,6 +52,13 @@ public class OvenController : MonoBehaviour
     private Coroutine burnCo;
     private Coroutine cooldownCo;
 
+    void Start()
+    {
+        // Initialize tray state - assume tray starts IN by default
+        // This will be updated when TrayHandle fires its events
+        isTrayIn = true;
+    }
+
     // ─────────────────────────────────────────────────────────────────────────────
     // Public API
     // ─────────────────────────────────────────────────────────────────────────────
@@ -66,8 +75,8 @@ public class OvenController : MonoBehaviour
         isOn = true;
         Debug.Log("[OvenController] Oven turned ON");
         OnOvenTurnedOn?.Invoke();
-        // If tray is already in, the tray should call OnTrayFullyIn(). We also try immediately just in case:
-        TryStartBurnIfPossible();
+        // Only try to start burn if tray is in and conditions are met
+        if (isTrayIn) TryStartBurnIfPossible();
     }
 
     public void TurnOff()
@@ -89,10 +98,20 @@ public class OvenController : MonoBehaviour
     /// </summary>
     public void OnTrayFullyIn()
     {
+        isTrayIn = true;
         if (autoRefreshPlushieOnTrayIn)
             AutoFindPlushieOnSlot();
 
         TryStartBurnIfPossible();
+    }
+
+    /// <summary>
+    /// Wire TrayHandle.onTrayFullyOut → this.
+    /// Updates tray position state.
+    /// </summary>
+    public void OnTrayFullyOut()
+    {
+        isTrayIn = false;
     }
 
     /// <summary>
@@ -129,6 +148,15 @@ public class OvenController : MonoBehaviour
         currentPlushie = plushieSlot.GetComponentInChildren<PlushieBehaviour>(includeInactive: false);
     }
 
+    /// <summary>
+    /// Manually set tray position state (used for initialization or debugging).
+    /// </summary>
+    public void SetTrayPosition(bool inPosition)
+    {
+        isTrayIn = inPosition;
+        Debug.Log($"[OvenController] Tray position manually set to {(inPosition ? "IN" : "OUT")}");
+    }
+
     // ─────────────────────────────────────────────────────────────────────────────
     // Core logic
     // ─────────────────────────────────────────────────────────────────────────────
@@ -136,6 +164,7 @@ public class OvenController : MonoBehaviour
     private void TryStartBurnIfPossible()
     {
         if (!isOn) return;
+        if (!isTrayIn) return;  // Check if tray is in position
         if (IsBurning || IsCooling) return;
         if (currentPlushie == null) return;
 
