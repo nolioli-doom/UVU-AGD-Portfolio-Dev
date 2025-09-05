@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 5469734050290143683}
   - component: {fileID: 2649595249209890126}
   - component: {fileID: -1098554608323728213}
+  - component: {fileID: 8693716104229741468}
+  - component: {fileID: -1592513134338286093}
   m_Layer: 0
   m_Name: Dog
   m_TagString: Untagged
@@ -140,3 +142,44 @@ MonoBehaviour:
   OnDestroyed:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8693716104229741468
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2867432814739582233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1624d0152ecc04697bef143a46ccda24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onClick:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: -1592513134338286093}
+        m_TargetAssemblyTypeName: DismemberableBody, Assembly-CSharp
+        m_MethodName: OnClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  buttonID: 
+--- !u!114 &-1592513134338286093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2867432814739582233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaf25326cc0d848dcb804f0be106f47f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bodyType: DOG
