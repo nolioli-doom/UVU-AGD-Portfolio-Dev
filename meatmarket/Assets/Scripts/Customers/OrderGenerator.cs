@@ -1,0 +1,266 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.Events;
+
+public class OrderGenerator : MonoBehaviour
+{
+    [Header("Tuning Data")]
+    public List<PlushieSpeciesSO> speciesDefs;
+    public List<CustomerArchetypeSO> customerArchetypes;
+    public List<OrderDifficultySO> difficultyByDay; // index clamped
+
+    [Header("Events")]
+    public UnityEvent onRoundGenerated;  // fire when ready; consumers can read CurrentRound
+    [Tooltip("Optional: send a copy to listeners after generation")]
+    public OrdersRoundEvent onRoundGeneratedWithPayload;
+    [Serializable] public class OrdersRoundEvent : UnityEvent<OrdersRound> { }
+
+    [Header("Debug/State")]
+    public OrdersRound CurrentRound;
+
+    System.Random rng = new System.Random();
+
+    public void GenerateRound(int dayIndex)
+    {
+        var diff = difficultyByDay[Mathf.Clamp(dayIndex, 0, difficultyByDay.Count - 1)];
+
+        // 1) Pick customer count
+        int customers = UnityEngine.Random.Range(diff.customersRange.x, diff.customersRange.y + 1);
+
+        // 2) Choose round “theme” species (1–2) to force overlap
+        var weighted = BuildWeightedSpeciesList();
+        var themeSpecies = PickThemeSpecies(weighted, count: rng.Next(1, 3)); // 1 or 2
+
+        // 3) Create orders
+        var orders = new List<CustomerOrder>();
+        var roundPartPool = new List<(SpeciesType, BodyPartType)>(); // used to bias overlap across customers
+
+        for (int i = 0; i < customers; i++)
+        {
+            var archetype = customerArchetypes[UnityEngine.Random.Range(0, customerArchetypes.Count)];
+            var order = new CustomerOrder
+            {
+                archetype = archetype,
+                tipMultiplier = archetype.tipMultiplier,
+                wasteSensitivity = archetype.wasteSensitivity,
+                customerName = string.IsNullOrEmpty(archetype.displayName) ? $"Customer {i + 1}" : archetype.displayName
+            };
+
+            // Time limit blended by patience/speed
+            float tMin = diff.timeLimitSecondsRange.x;
+            float tMax = diff.timeLimitSecondsRange.y;
+            float baseTime = UnityEngine.Random.Range(tMin, tMax);
+            baseTime /= archetype.speedBias;
+            baseTime *= archetype.patienceMultiplier;
+            order.timeLimitSeconds = Mathf.Clamp(baseTime, 20f, 300f);
+
+            // Items count
+            int items = UnityEngine.Random.Range(diff.itemsPerOrderRange.x, diff.itemsPerOrderRange.y + 1);
+
+            // Force within-customer same species sometimes
+            SpeciesType? lockedSpecies = null;
+            if (UnityEngine.Random.value < diff.sameSpeciesBias)
+                lockedSpecies = themeSpecies[rng.Next(themeSpecies.Count)];
+
+            for (int k = 0; k < items; k++)
+            {
+                SpeciesType s;
+                if (lockedSpecies.HasValue) s = lockedSpecies.Value;
+                else s = (UnityEngine.Random.value < diff.roundThemeBias)
+                      ? themeSpecies[rng.Next(themeSpecies.Count)]
+                      : weighted[rng.Next(weighted.Count)].species;
+
+                var def = speciesDefs.First(d => d.species == s);
+                BodyPartType part = PickPart(def);
+
+                // Quantity: usually within yield; sometimes force > yield to require extra body
+                int yield = def.GetYield(part);
+                int qty;
+                if (UnityEngine.Random.value < diff.requireExtraBodyChance && yield > 0)
+                    qty = yield + UnityEngine.Random.Range(1, 2 + 1); // exceed by 1–2
+                else
+                    qty = Mathf.Max(1, UnityEngine.Random.Range(1, Mathf.Max(2, yield + 1)));
+
+                // Quality: bias via curve & archetype precision
+                var q = RollQuality(diff.qualityCurve, archetype.precisionBias);
+
+                order.items.Add(new OrderItem { species = s, part = part, quantity = qty, minQuality = q });
+
+                // Store to encourage cross-customer reuse
+                roundPartPool.Add((s, part));
+            }
+
+            orders.Add(order);
+        }
+
+        // 4) Encourage overlap across customers by mutating some items to parts already requested
+        if (roundPartPool.Count > 0 && diff.overlapAcrossCustomers > 0f)
+        {
+            int mutations = Mathf.CeilToInt(orders.Sum(o => o.items.Count) * diff.overlapAcrossCustomers * 0.35f);
+            for (int m = 0; m < mutations; m++)
+            {
+                var sample = roundPartPool[rng.Next(roundPartPool.Count)];
+                var targetOrder = orders[rng.Next(orders.Count)];
+                if (targetOrder.items.Count == 0) continue;
+                var targetItem = targetOrder.items[rng.Next(targetOrder.items.Count)];
+                targetItem.species = sample.Item1;
+                targetItem.part = sample.Item2;
+            }
+        }
+
+        // 5) Respect species supply caps loosely (swap some requests if wildly over)
+        var impliedBodies = EstimateBodiesNeeded(orders);
+        ApplySupplySoftCaps(orders, impliedBodies, diff);
+
+        // 6) Finalize round
+        CurrentRound = new OrdersRound { dayIndex = dayIndex, orders = orders, impliedBodiesNeeded = impliedBodies };
+        onRoundGenerated?.Invoke();
+        onRoundGeneratedWithPayload?.Invoke(CloneRound(CurrentRound)); // send a safe copy
+    }
+
+    // ===== Helpers =====
+
+    private struct WeightedSpecies { public SpeciesType species; public float weight; public PlushieSpeciesSO def; }
+
+    private List<WeightedSpecies> BuildWeightedSpeciesList()
+    {
+        var list = new List<WeightedSpecies>();
+        foreach (var d in speciesDefs)
+        {
+            float w = Mathf.Max(0.001f, d.rarityWeight);
+            list.Add(new WeightedSpecies { species = d.species, weight = w, def = d });
+        }
+        return list;
+    }
+
+    private List<SpeciesType> PickThemeSpecies(List<WeightedSpecies> weighted, int count)
+    {
+        var pool = weighted.ToList();
+        var result = new List<SpeciesType>();
+        count = Mathf.Clamp(count, 1, Mathf.Min(2, pool.Count));
+        for (int i = 0; i < count; i++)
+        {
+            float total = pool.Sum(p => p.weight);
+            float r = (float)rng.NextDouble() * total;
+            float acc = 0f;
+            foreach (var w in pool)
+            {
+                acc += w.weight;
+                if (r <= acc)
+                {
+                    result.Add(w.species);
+                    pool.Remove(w);
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    private BodyPartType PickPart(PlushieSpeciesSO def)
+    {
+        // Weight parts that actually have yields; allow occasional Scrap
+        var valid = def.yields.Where(y => y.count > 0).Select(y => y.part).ToList();
+        if (valid.Count == 0) return BodyPartType.Scrap;
+        // Mild bias toward limbs to create overlap fun
+        var limbBias = new[] { BodyPartType.Arm, BodyPartType.Leg, BodyPartType.Tail };
+        if (rng.NextDouble() < 0.55 && valid.Any(limbBias.Contains))
+            return limbBias.First(p => valid.Contains(p));
+        return valid[rng.Next(valid.Count)];
+    }
+
+    private QualityTier RollQuality(AnimationCurve curve, float precisionBias)
+    {
+        float r = Mathf.Clamp01((float)rng.NextDouble());
+        // bias toward high quality by skewing r downward with precision
+        r = Mathf.Pow(r, 1f / Mathf.Clamp(precisionBias, 0.1f, 4f));
+        float t = curve.Evaluate(r); // 0..1
+        if (t > 0.85f) return QualityTier.Perfect;
+        if (t > 0.6f)  return QualityTier.High;
+        if (t > 0.3f)  return QualityTier.Normal;
+        return QualityTier.Low;
+    }
+
+    private Dictionary<SpeciesType, int> EstimateBodiesNeeded(List<CustomerOrder> orders)
+    {
+        // Greedy estimate: for each species/part, sum quantities and divide by per-body yields
+        var map = new Dictionary<(SpeciesType, BodyPartType), int>();
+        foreach (var o in orders)
+        foreach (var it in o.items)
+        {
+            var key = (it.species, it.part);
+            map[key] = map.TryGetValue(key, out var v) ? v + it.quantity : it.quantity;
+        }
+
+        var bodiesBySpecies = new Dictionary<SpeciesType, int>();
+        foreach (var pair in map)
+        {
+            var def = speciesDefs.First(d => d.species == pair.Key.Item1);
+            int perBody = Mathf.Max(1, def.GetYield(pair.Key.Item2)); // safety: min 1
+            int bodies = Mathf.CeilToInt(pair.Value / (float)perBody);
+            bodiesBySpecies[pair.Key.Item1] = bodiesBySpecies.TryGetValue(pair.Key.Item1, out var b) ? Mathf.Max(b, bodies) : bodies;
+        }
+        return bodiesBySpecies;
+    }
+
+    private void ApplySupplySoftCaps(List<CustomerOrder> orders, Dictionary<SpeciesType, int> impliedBodies, OrderDifficultySO diff)
+    {
+        foreach (var kv in impliedBodies.ToList())
+        {
+            var def = speciesDefs.First(d => d.species == kv.Key);
+            int cap = def.dailySupplyCap + diff.softSpeciesCapBuffer;
+            if (kv.Value <= cap) continue;
+
+            // Swap some items to a more common species (heuristic)
+            int over = kv.Value - cap;
+            ReplaceSpeciesInSomeItems(orders, kv.Key, over);
+        }
+    }
+
+    private void ReplaceSpeciesInSomeItems(List<CustomerOrder> orders, SpeciesType tooMany, int countToReduce)
+    {
+        // Find a replacement species with high rarityWeight
+        var replacement = speciesDefs.OrderByDescending(s => s.rarityWeight).First().species;
+
+        foreach (var order in orders)
+        {
+            foreach (var item in order.items)
+            {
+                if (countToReduce <= 0) return;
+                if (item.species != tooMany) continue;
+
+                // swap species; keep same part/qty
+                item.species = replacement;
+                countToReduce--;
+            }
+        }
+    }
+
+    private OrdersRound CloneRound(OrdersRound src)
+    {
+        var clone = new OrdersRound
+        {
+            dayIndex = src.dayIndex,
+            orders = new List<CustomerOrder>(),
+            impliedBodiesNeeded = new Dictionary<SpeciesType, int>(src.impliedBodiesNeeded)
+        };
+        foreach (var o in src.orders)
+        {
+            var c = new CustomerOrder
+            {
+                archetype = o.archetype,
+                timeLimitSeconds = o.timeLimitSeconds,
+                tipMultiplier = o.tipMultiplier,
+                wasteSensitivity = o.wasteSensitivity,
+                customerName = o.customerName,
+                items = new List<OrderItem>()
+            };
+            foreach (var it in o.items)
+                c.items.Add(new OrderItem { species = it.species, part = it.part, quantity = it.quantity, minQuality = it.minQuality });
+            clone.orders.Add(c);
+        }
+        return clone;
+    }
+}
