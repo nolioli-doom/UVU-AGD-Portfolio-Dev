@@ -5,6 +5,9 @@ public class CutRouter : MonoBehaviour
 {
     [System.Serializable] public class CutEvent : UnityEvent<CutContext> { }
 
+    [Header("Body Configuration")]
+    [SerializeField] private string bodyType = "CAT";
+
     [Header("Routed Events (wire these ONCE)")]
     public CutEvent OnAnyCutEnter;
     public CutEvent OnPerfectCutEnter;
@@ -12,6 +15,10 @@ public class CutRouter : MonoBehaviour
 
     [Header("Debug")]
     public bool logCuts = false;
+    public bool logToolUsage = true;          // log which tool was used on which body part
+
+    // Public property to access body type
+    public string BodyType => bodyType;
 
     void Awake()
     {
@@ -36,7 +43,19 @@ public class CutRouter : MonoBehaviour
     void HandleCutEnter(CutContext ctx)
     {
         if (logCuts)
-            Debug.Log($"[{name}] CUT: {ctx.limb}/{ctx.section}/{ctx.precision} at {ctx.hitPoint}", this);
+        {
+            string jointName = ctx.GetSpecificJointName();
+            string limbInfo = ctx.limb != Limb.None ? $"{ctx.limb}/" : "";
+            Debug.Log($"[{name}] CUT: {limbInfo}{jointName}/{ctx.precision} at {ctx.hitPoint}", this);
+        }
+
+        // Enhanced logging with tool and body type information
+        if (logToolUsage)
+        {
+            string jointName = ctx.GetSpecificJointName();
+            string limbInfo = ctx.limb != Limb.None ? $"{ctx.limb}/" : "";
+            Debug.Log($"[CutRouter] {ctx.toolType} used on {ctx.bodyType} - {limbInfo}{jointName}/{ctx.precision} cut at {ctx.hitPoint}", this);
+        }
 
         OnAnyCutEnter?.Invoke(ctx);
 
