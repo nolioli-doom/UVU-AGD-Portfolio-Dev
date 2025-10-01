@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adf85f60fc15e401aa068235bf448bae, type: 3}
+  m_Name: Hard
+  m_EditorClassIdentifier: 
+  customersRange: {x: 5, y: 9}
+  itemsPerOrderRange: {x: 2, y: 9}
+  roundThemeBias: 0.65
+  sameSpeciesBias: 0.35
+  overlapAcrossCustomers: 0.7
+  qualityCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.2
+      inSlope: 2.8692825
+      outSlope: 2.8692825
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.09634918
+      value: 0.476453
+      inSlope: 0.5389411
+      outSlope: 0.5389411
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.20135194
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.5793687
+      outSlope: 0.5793687
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  timeLimitSecondsRange: {x: 35, y: 120}
+  rareSpeciesFavor: 0.35
+  softSpeciesCapBuffer: 3
+  requireExtraBodyChance: 0.7
