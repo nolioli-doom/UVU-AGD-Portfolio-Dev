@@ -13,6 +13,9 @@ public class CutZone : MonoBehaviour
     public bool useTriggerCallbacks = false;   // enable if using OnTriggerEnter as the cut input
     public bool debugLog = true;
 
+    [Header("Cut State (Runtime)")]
+    public bool HasBeenCut { get; private set; } = false;
+
     // C# events (router subscribes)
     public event Action<CutContext> OnCutEnter;
     public event Action<CutContext> OnCutExit;
@@ -84,5 +87,16 @@ public class CutZone : MonoBehaviour
         
         // Final fallback
         return "UNKNOWN";
+    }
+
+    /// <summary>
+    /// Mark this cut zone as having been cut (called by BodyPartTree)
+    /// </summary>
+    public void MarkAsCut()
+    {
+        if (HasBeenCut) return;  // Prevent double-cutting
+        
+        HasBeenCut = true;
+        if (debugLog) Debug.Log($"[CutZone] {limb}/{section}/{precision} marked as CUT", this);
     }
 }

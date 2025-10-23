@@ -10,26 +10,28 @@ public class PlushieSpeciesSO : ScriptableObject
     [Range(0f, 1f)] public float rarityWeight = 0.5f;    // higher = shows up more often
     [Min(0)] public int dailySupplyCap = 99;             // soft cap per day
 
-    [Header("Yields per Body")]
+    [Header("Yields per Body (Generic Counts)")]
+    [Tooltip("Use generic types: Hand: 2 (not L_Hand: 1, R_Hand: 1)")]
     public List<PartYield> yields = new();
 
     [Serializable]
     public struct PartYield
     {
-        public BodyPartType part;
+        public OrderPartType partType;
+        [Tooltip("Total count per body (e.g., Hand: 2 means 1 left + 1 right)")]
         [Min(0)] public int count;
     }
 
     // Helper lookup at runtime
-    private Dictionary<BodyPartType, int> _yieldMap;
-    public int GetYield(BodyPartType part)
+    private Dictionary<OrderPartType, int> _yieldMap;
+    public int GetYield(OrderPartType partType)
     {
         if (_yieldMap == null)
         {
-            _yieldMap = new Dictionary<BodyPartType, int>();
+            _yieldMap = new Dictionary<OrderPartType, int>();
             foreach (var y in yields)
-                _yieldMap[y.part] = y.count;
+                _yieldMap[y.partType] = y.count;
         }
-        return _yieldMap.TryGetValue(part, out var c) ? c : 0;
+        return _yieldMap.TryGetValue(partType, out var c) ? c : 0;
     }
 }
