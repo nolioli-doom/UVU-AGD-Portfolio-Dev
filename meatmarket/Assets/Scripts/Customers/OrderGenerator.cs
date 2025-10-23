@@ -11,6 +11,10 @@ public class OrderGenerator : MonoBehaviour
     public List<CustomerArchetypeSO> customerArchetypes;
     public List<OrderDifficultySO> difficultyByDay; // index clamped
 
+    [Header("Order Management")]
+    [Tooltip("Optional: Automatically populate this OrderManagerSO when generating rounds")]
+    public OrderManagerSO orderManagerSO;
+
     [Header("Events")]
     public UnityEvent onRoundGenerated;  // fire when ready; consumers can read CurrentRound
     [Tooltip("Optional: send a copy to listeners after generation")]
@@ -21,6 +25,14 @@ public class OrderGenerator : MonoBehaviour
     public OrdersRound CurrentRound;
 
     System.Random rng = new System.Random();
+
+    /// <summary>
+    /// Generate a test round with day index 0 (for quick testing via button)
+    /// </summary>
+    public void GenerateTestRound()
+    {
+        GenerateRound(0);
+    }
 
     public void GenerateRound(int dayIndex)
     {
@@ -35,7 +47,7 @@ public class OrderGenerator : MonoBehaviour
 
         // 3) Create orders
         var orders = new List<CustomerOrder>();
-        var roundPartPool = new List<(SpeciesType, BodyPartType)>(); // used to bias overlap across customers
+        var roundPartPool = new List<(SpeciesType, OrderPartType)>(); // used to bias overlap across customers
 
         for (int i = 0; i < customers; i++)
         {
@@ -73,10 +85,10 @@ public class OrderGenerator : MonoBehaviour
                       : weighted[rng.Next(weighted.Count)].species;
 
                 var def = speciesDefs.First(d => d.species == s);
-                BodyPartType part = PickPart(def);
+                OrderPartType partType = PickPartType(def);
 
                 // Quantity: usually within yield; sometimes force > yield to require extra body
-                int yield = def.GetYield(part);
+                int yield = def.GetYield(partType);
                 int qty;
                 if (UnityEngine.Random.value < diff.requireExtraBodyChance && yield > 0)
                     qty = yield + UnityEngine.Random.Range(1, 2 + 1); // exceed by 1–2
@@ -86,10 +98,10 @@ public class OrderGenerator : MonoBehaviour
                 // Quality: bias via curve & archetype precision
                 var q = RollQuality(diff.qualityCurve, archetype.precisionBias);
 
-                order.items.Add(new OrderItem { species = s, part = part, quantity = qty, minQuality = q });
+                order.items.Add(new OrderItem { species = s, partType = partType, quantity = qty, minQuality = q });
 
                 // Store to encourage cross-customer reuse
-                roundPartPool.Add((s, part));
+                roundPartPool.Add((s, partType));
             }
 
             orders.Add(order);
@@ -106,7 +118,7 @@ public class OrderGenerator : MonoBehaviour
                 if (targetOrder.items.Count == 0) continue;
                 var targetItem = targetOrder.items[rng.Next(targetOrder.items.Count)];
                 targetItem.species = sample.Item1;
-                targetItem.part = sample.Item2;
+                targetItem.partType = sample.Item2;
             }
         }
 
@@ -116,6 +128,13 @@ public class OrderGenerator : MonoBehaviour
 
         // 6) Finalize round
         CurrentRound = new OrdersRound { dayIndex = dayIndex, orders = orders, impliedBodiesNeeded = impliedBodies };
+        
+        // 7) Populate OrderManagerSO if assigned
+        if (orderManagerSO != null)
+        {
+            orderManagerSO.SetOrders(orders);
+        }
+        
         onRoundGenerated?.Invoke();
         onRoundGeneratedWithPayload?.Invoke(CloneRound(CurrentRound)); // send a safe copy
     }
@@ -159,15 +178,25 @@ public class OrderGenerator : MonoBehaviour
         return result;
     }
 
-    private BodyPartType PickPart(PlushieSpeciesSO def)
+    private OrderPartType PickPartType(PlushieSpeciesSO def)
     {
-        // Weight parts that actually have yields; allow occasional Scrap
-        var valid = def.yields.Where(y => y.count > 0).Select(y => y.part).ToList();
-        if (valid.Count == 0) return BodyPartType.Scrap;
-        // Mild bias toward limbs to create overlap fun
-        var limbBias = new[] { BodyPartType.Arm, BodyPartType.Leg, BodyPartType.Tail };
-        if (rng.NextDouble() < 0.55 && valid.Any(limbBias.Contains))
-            return limbBias.First(p => valid.Contains(p));
+        // Pick part types that actually have yields
+        var valid = def.yields.Where(y => y.count > 0).Select(y => y.partType).ToList();
+        if (valid.Count == 0) return OrderPartType.Scrap;
+        
+        // Mild bias toward limb parts to create overlap opportunities
+        var limbParts = new[] { 
+            OrderPartType.Upper_Arm,
+            OrderPartType.Forearm,
+            OrderPartType.Hand,
+            OrderPartType.Upper_Leg,
+            OrderPartType.Lower_Leg,
+            OrderPartType.Foot
+        };
+        
+        if (rng.NextDouble() < 0.55 && valid.Any(limbParts.Contains))
+            return limbParts.First(p => valid.Contains(p));
+        
         return valid[rng.Next(valid.Count)];
     }
 
@@ -185,12 +214,12 @@ public class OrderGenerator : MonoBehaviour
 
     private Dictionary<SpeciesType, int> EstimateBodiesNeeded(List<CustomerOrder> orders)
     {
-        // Greedy estimate: for each species/part, sum quantities and divide by per-body yields
-        var map = new Dictionary<(SpeciesType, BodyPartType), int>();
+        // Greedy estimate: for each species/partType, sum quantities and divide by per-body yields
+        var map = new Dictionary<(SpeciesType, OrderPartType), int>();
         foreach (var o in orders)
         foreach (var it in o.items)
         {
-            var key = (it.species, it.part);
+            var key = (it.species, it.partType);
             map[key] = map.TryGetValue(key, out var v) ? v + it.quantity : it.quantity;
         }
 
@@ -258,7 +287,7 @@ public class OrderGenerator : MonoBehaviour
                 items = new List<OrderItem>()
             };
             foreach (var it in o.items)
-                c.items.Add(new OrderItem { species = it.species, part = it.part, quantity = it.quantity, minQuality = it.minQuality });
+                c.items.Add(new OrderItem { species = it.species, partType = it.partType, quantity = it.quantity, minQuality = it.minQuality });
             clone.orders.Add(c);
         }
         return clone;

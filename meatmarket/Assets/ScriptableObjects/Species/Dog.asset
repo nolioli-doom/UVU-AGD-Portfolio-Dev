@@ -16,11 +16,21 @@ MonoBehaviour:
   rarityWeight: 0.6
   dailySupplyCap: 99
   yields:
-  - part: 0
+  - partType: 0
     count: 1
-  - part: 1
+  - partType: 1
     count: 1
-  - part: 2
+  - partType: 2
+    count: 1
+  - partType: 3
     count: 2
-  - part: 3
+  - partType: 4
+    count: 2
+  - partType: 5
+    count: 2
+  - partType: 6
+    count: 2
+  - partType: 7
+    count: 2
+  - partType: 8
     count: 2

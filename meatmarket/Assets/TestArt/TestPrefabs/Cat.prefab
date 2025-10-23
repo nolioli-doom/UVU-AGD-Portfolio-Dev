@@ -3080,6 +3080,7 @@ GameObject:
   - component: {fileID: -8154669608596506531}
   - component: {fileID: -9148830224236983605}
   - component: {fileID: 7611894652158056803}
+  - component: {fileID: -3546382388173472809}
   m_Layer: 0
   m_Name: Cat
   m_TagString: Untagged
@@ -3121,7 +3122,7 @@ CapsuleCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Radius: 0.5
   m_Height: 2
@@ -3163,7 +3164,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8384460950360485178}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1624d0152ecc04697bef143a46ccda24, type: 3}
   m_Name: 
@@ -3191,7 +3192,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8384460950360485178}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eaf25326cc0d848dcb804f0be106f47f, type: 3}
   m_Name: 
@@ -3212,7 +3213,19 @@ MonoBehaviour:
   bodyType: CAT
   OnAnyCutEnter:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: -3546382388173472809}
+        m_TargetAssemblyTypeName: BodyPartTree, Assembly-CSharp
+        m_MethodName: HandleCut
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   OnPerfectCutEnter:
     m_PersistentCalls:
       m_Calls: []
@@ -3221,6 +3234,21 @@ MonoBehaviour:
       m_Calls: []
   logCuts: 0
   logToolUsage: 1
+--- !u!114 &-3546382388173472809
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8384460950360485178}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccc06003d40e34725a3f52f42061a9ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  species: 0
+  depositTray: {fileID: 0}
+  logSegmentStates: 1
 --- !u!1 &8574042895514378002
 GameObject:
   m_ObjectHideFlags: 0

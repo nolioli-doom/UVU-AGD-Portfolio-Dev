@@ -28,7 +28,7 @@ public class OrderCardUI : MonoBehaviour
         // Ordered Items (multiline)
         var sb = new StringBuilder();
         foreach (var it in order.items)
-            sb.AppendLine($"{it.quantity}× {it.species} {it.part} (≥{it.minQuality})");
+            sb.AppendLine($"{it.quantity}× {it.species} {it.partType} (≥{it.minQuality})");
         itemsText.text = sb.ToString().TrimEnd();
     }
 
