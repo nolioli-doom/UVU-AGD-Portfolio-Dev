@@ -5,6 +5,7 @@ using UnityEngine;
 /// <summary>
 /// ScriptableObject that manages all orders for the current day.
 /// Persists across scenes and tracks pinning state.
+/// Automatically clears on game start to prevent persistent test data.
 /// </summary>
 [CreateAssetMenu(menuName = "Butchery/Order Manager")]
 public class OrderManagerSO : ScriptableObject
@@ -17,7 +18,20 @@ public class OrderManagerSO : ScriptableObject
     public List<int> pinnedOrderIndices = new List<int>();  // Indices of pinned orders
 
     [Header("Debug")]
-    public bool logActions = true;
+    public bool logActions = false;
+
+    /// <summary>
+    /// Automatically clear data when the ScriptableObject is loaded.
+    /// This prevents persistent test data from previous play sessions.
+    /// </summary>
+    void OnEnable()
+    {
+        // Clear any existing data to ensure fresh start
+        allOrders.Clear();
+        pinnedOrderIndices.Clear();
+        
+        if (logActions) Debug.Log("[OrderManagerSO] Auto-cleared on enable - fresh start guaranteed");
+    }
 
     /// <summary>
     /// Set all orders for the day (called by OrderGenerator)
@@ -129,6 +143,17 @@ public class OrderManagerSO : ScriptableObject
         allOrders.Clear();
         pinnedOrderIndices.Clear();
         if (logActions) Debug.Log("[OrderManagerSO] Cleared all orders");
+    }
+
+    /// <summary>
+    /// Force clear all data (useful for debugging)
+    /// </summary>
+    [ContextMenu("Force Clear All Data")]
+    public void ForceClearAllData()
+    {
+        allOrders.Clear();
+        pinnedOrderIndices.Clear();
+        Debug.Log("[OrderManagerSO] FORCE CLEARED all data - this should fix the persistent test orders issue");
     }
 
     /// <summary>
