@@ -59,6 +59,12 @@ public class UISwitcher : MonoBehaviour
         isInCustomerScene = !isInCustomerScene;
         UpdateSceneState();
         
+        // When switching to butchery, reset all customers to roaming
+        if (!isInCustomerScene)
+        {
+            ResetAllCustomersToRoaming();
+        }
+        
         if (logSwitches) Debug.Log($"[UISwitcher] Switched to {(isInCustomerScene ? "Customer" : "Butchery")} scene");
     }
     
@@ -81,7 +87,37 @@ public class UISwitcher : MonoBehaviour
         isInCustomerScene = false;
         UpdateSceneState();
         
+        // Reset all customers to roaming when switching to butchery
+        ResetAllCustomersToRoaming();
+        
         if (logSwitches) Debug.Log("[UISwitcher] Switched to Butchery scene");
+    }
+    
+    /// <summary>
+    /// Public method to reset customers to roaming (call from button OnClick)
+    /// </summary>
+    public void ResetCustomersToRoaming()
+    {
+        ResetAllCustomersToRoaming();
+    }
+    
+    /// <summary>
+    /// Reset all customers to roaming state (called when switching to butchery)
+    /// </summary>
+    private void ResetAllCustomersToRoaming()
+    {
+        CustomerQueueManager queueManager = FindObjectOfType<CustomerQueueManager>();
+        if (queueManager != null)
+        {
+            var queuedCustomers = queueManager.GetAllQueuedCustomers();
+            foreach (var customer in queuedCustomers)
+            {
+                customer.SetWanderingEnabled(true);
+            }
+            queueManager.ClearQueue();
+        }
+        
+        if (logSwitches) Debug.Log("[UISwitcher] Reset all customers to roaming state");
     }
     
     /// <summary>

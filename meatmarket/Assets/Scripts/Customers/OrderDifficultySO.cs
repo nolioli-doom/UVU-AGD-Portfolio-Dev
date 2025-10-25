@@ -21,7 +21,4 @@ public class OrderDifficultySO : ScriptableObject
     [Header("Rarity & Caps")]
     [Range(0f, 1f)] public float rareSpeciesFavor = 0.25f; // how often to pull rarer species
     public int softSpeciesCapBuffer = 2;                    // allow exceeding cap by small buffer (then adjust)
-
-    [Header("Spice")]
-    [Range(0f, 1f)] public float requireExtraBodyChance = 0.35f; // occasionally exceed per-body yields
 }

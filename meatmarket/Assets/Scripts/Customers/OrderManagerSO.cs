@@ -157,6 +157,53 @@ public class OrderManagerSO : ScriptableObject
     }
 
     /// <summary>
+    /// Pin an order by CustomerOrder object. Returns true if successful.
+    /// </summary>
+    public bool PinOrder(CustomerOrder order)
+    {
+        if (order == null) return false;
+        
+        int index = allOrders.IndexOf(order);
+        if (index == -1)
+        {
+            if (logActions) Debug.LogWarning("[OrderManagerSO] Order not found in allOrders list");
+            return false;
+        }
+        
+        return PinOrderAtIndex(index);
+    }
+
+    /// <summary>
+    /// Unpin an order by CustomerOrder object. Returns true if successful.
+    /// </summary>
+    public bool UnpinOrder(CustomerOrder order)
+    {
+        if (order == null) return false;
+        
+        int index = allOrders.IndexOf(order);
+        if (index == -1)
+        {
+            if (logActions) Debug.LogWarning("[OrderManagerSO] Order not found in allOrders list");
+            return false;
+        }
+        
+        return UnpinOrderAtIndex(index);
+    }
+
+    /// <summary>
+    /// Check if an order is pinned by CustomerOrder object
+    /// </summary>
+    public bool IsOrderPinned(CustomerOrder order)
+    {
+        if (order == null) return false;
+        
+        int index = allOrders.IndexOf(order);
+        if (index == -1) return false;
+        
+        return IsOrderPinned(index);
+    }
+
+    /// <summary>
     /// Get count of available pin slots
     /// </summary>
     public int GetAvailablePinSlots()
