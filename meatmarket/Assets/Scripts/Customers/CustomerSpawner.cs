@@ -338,9 +338,8 @@ public class CustomerSpawner : MonoBehaviour
             customerVisual = customer.AddComponent<CustomerVisual>();
         }
         
-        // Set waiting area boundaries for wandering
-        customerVisual.waitingAreaCenter = waitingAreaCenter;
-        customerVisual.waitingAreaSize = waitingAreaSize;
+        // Set waiting area boundaries for wandering using the public method
+        customerVisual.SetWaitingArea(waitingAreaCenter, waitingAreaSize);
         
         // Assign next pre-generated order (no repeats)
         CustomerOrder order = GetNextPreGeneratedOrder();
@@ -381,7 +380,15 @@ public class CustomerSpawner : MonoBehaviour
         
         nextOrderIndex++;
         
-        if (logSpawns) Debug.Log($"[CustomerSpawner] Assigned order {nextOrderIndex}/{preGeneratedOrders.Count} to customer: {order.customerName} with {order.items?.Count ?? 0} pieces (Order ID: {order.GetHashCode()}) - Day {dayIndex} ({orderGenerator.GetDifficultyName(dayIndex)})");
+        if (logSpawns) 
+        {
+            Debug.Log($"[CustomerSpawner] Assigned order {nextOrderIndex}/{preGeneratedOrders.Count} to customer: {order.customerName}");
+            Debug.Log($"  - Pieces: {order.items?.Count ?? 0}");
+            Debug.Log($"  - Time Limit: {order.timeLimitSeconds}s");
+            Debug.Log($"  - Archetype: {order.archetype?.displayName ?? "None"} (Patience: {order.archetype?.patienceMultiplier ?? 1f}, Speed: {order.archetype?.speedBias ?? 1f})");
+            Debug.Log($"  - Order ID: {order.GetHashCode()}");
+            Debug.Log($"  - Day {dayIndex} ({orderGenerator.GetDifficultyName(dayIndex)})");
+        }
         
         return order;
     }

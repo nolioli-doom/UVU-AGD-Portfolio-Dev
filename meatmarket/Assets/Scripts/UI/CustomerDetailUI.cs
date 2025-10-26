@@ -48,8 +48,8 @@ public class CustomerDetailUI : MonoBehaviour
     public string orderCompletedText = "Order Completed!";
     
     [Header("Timer Settings")]
-    [Tooltip("Format string for timer display (e.g., 'Time: {0:F1}s')")]
-    public string timerFormat = "Time: {0:F1}s";
+    [Tooltip("Format string for timer display (e.g., 'Time: {0}s')")]
+    public string timerFormat = "Time: {0}s";
     
     [Tooltip("Color for normal timer")]
     public Color normalTimerColor = Color.white;
@@ -308,16 +308,18 @@ public class CustomerDetailUI : MonoBehaviour
         }
         else
         {
-            timerText.text = string.Format(timerFormat, remainingTime);
+            int timeInt = Mathf.CeilToInt(remainingTime);
+            timerText.text = "Time: " + timeInt.ToString() + "s";
             timerText.color = remainingTime <= urgentTimeThreshold ? urgentTimerColor : normalTimerColor;
         }
     }
     
     private float GetOrderRemainingTime(CustomerOrder order)
     {
-        // This is a placeholder - you'll need to implement actual timer logic
-        // For now, return a mock value
-        return 30f; // 30 seconds remaining
+        if (order == null) return 0f;
+        
+        // Return the order's time limit (this is a placeholder until we implement actual timer tracking)
+        return order.timeLimitSeconds;
     }
     
     /// <summary>

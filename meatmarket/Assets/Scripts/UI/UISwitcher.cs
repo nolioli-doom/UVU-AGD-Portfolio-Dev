@@ -112,9 +112,16 @@ public class UISwitcher : MonoBehaviour
             var queuedCustomers = queueManager.GetAllQueuedCustomers();
             foreach (var customer in queuedCustomers)
             {
-                customer.SetWanderingEnabled(true);
+                customer.ReturnToWaitingArea();
             }
             queueManager.ClearQueue();
+        }
+        
+        // Also reset all customers in the scene (in case some aren't in queue)
+        CustomerVisual[] allCustomers = FindObjectsOfType<CustomerVisual>();
+        foreach (var customer in allCustomers)
+        {
+            customer.ReturnToWaitingArea();
         }
         
         if (logSwitches) Debug.Log("[UISwitcher] Reset all customers to roaming state");

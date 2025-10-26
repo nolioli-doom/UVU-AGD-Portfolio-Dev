@@ -11,18 +11,30 @@ public class CustomerVisual : MonoBehaviour
     [Tooltip("Speed of wandering movement")]
     public float wanderSpeed = 1f;
     
-    [Tooltip("Time between direction changes")]
-    public float directionChangeInterval = 2f;
+    [Tooltip("Time to wait before moving to new target (in seconds)")]
+    public float waitTimeBetweenMovements = 1.5f;
     
     [Tooltip("Enable wandering movement")]
     public bool enableWandering = true;
     
-    [Header("Waiting Area Boundaries")]
-    [Tooltip("Center of the waiting area")]
-    public Vector3 waitingAreaCenter = Vector3.zero;
+    [Tooltip("Y offset for customer height (adjusts spawn height above/below ground)")]
+    public float heightOffset = 0f;
     
-    [Tooltip("Size of the waiting area (X, Y, Z)")]
-    public Vector3 waitingAreaSize = new Vector3(10, 2, 8);
+    [Header("Waiting Area Boundaries")]
+    [Tooltip("Center of the waiting area (set by CustomerSpawner)")]
+    private Vector3 waitingAreaCenter = Vector3.zero;
+    
+    [Tooltip("Size of the waiting area (set by CustomerSpawner)")]
+    private Vector3 waitingAreaSize = new Vector3(10, 2, 8);
+    
+    /// <summary>
+    /// Set the waiting area boundaries (called by CustomerSpawner)
+    /// </summary>
+    public void SetWaitingArea(Vector3 center, Vector3 size)
+    {
+        waitingAreaCenter = center;
+        waitingAreaSize = size;
+    }
     
     [Header("Debug")]
     public bool logMovement = false;
@@ -35,30 +47,25 @@ public class CustomerVisual : MonoBehaviour
     private CustomerArchetypeSO archetype;
     private Vector3 spawnPosition;
     private Vector3 currentTarget;
-    private float lastDirectionChange;
     private bool isMoving = false;
+    private bool isWaiting = false;
     
     void Start()
     {
         spawnPosition = transform.position;
-        lastDirectionChange = Time.time;
         
-        // Set initial target
-        SetNewWanderTarget();
+        // Start wandering immediately
+        StartNewWanderCycle();
     }
     
     void Update()
     {
-        if (enableWandering && isMoving)
+        if (!enableWandering) return;
+        
+        if (isMoving)
         {
+            // Only process movement while moving
             MoveTowardsTarget();
-            
-            // Change direction periodically
-            if (Time.time - lastDirectionChange >= directionChangeInterval)
-            {
-                SetNewWanderTarget();
-                lastDirectionChange = Time.time;
-            }
         }
     }
     
@@ -75,28 +82,64 @@ public class CustomerVisual : MonoBehaviour
     
     private void MoveTowardsTarget()
     {
-        Vector3 direction = (currentTarget - transform.position).normalized;
-        transform.position += direction * wanderSpeed * Time.deltaTime;
+        float distance = Vector3.Distance(transform.position, currentTarget);
         
-        // Check if we've reached the target
-        if (Vector3.Distance(transform.position, currentTarget) < 0.1f)
+        // Check if we're close enough to the target
+        if (distance < 0.1f)
         {
-            SetNewWanderTarget();
+            // Smoothly lerp to exact position
+            float lerpSpeed = wanderSpeed * 2f; // Faster lerp when close
+            transform.position = Vector3.Lerp(transform.position, currentTarget, lerpSpeed * Time.deltaTime);
+            
+            // Check if we're close enough to consider "reached"
+            if (distance < 0.05f)
+            {
+                StartWaiting();
+            }
+        }
+        else
+        {
+            // Normal movement with smooth lerping
+            float t = Time.deltaTime * wanderSpeed / distance;
+            transform.position = Vector3.Lerp(transform.position, currentTarget, t);
         }
     }
     
-    private void SetNewWanderTarget()
+    private void StartWaiting()
     {
+        isMoving = false;
+        isWaiting = true;
+        
+        // Start coroutine to wait and then resume wandering
+        StartCoroutine(WaitAndResumeWandering());
+        
+        if (logMovement) Debug.Log($"[CustomerVisual] Reached target, waiting {waitTimeBetweenMovements}s before next movement");
+    }
+    
+    private System.Collections.IEnumerator WaitAndResumeWandering()
+    {
+        yield return new WaitForSeconds(waitTimeBetweenMovements);
+        
+        if (enableWandering && isWaiting)
+        {
+            StartNewWanderCycle();
+        }
+    }
+    
+    private void StartNewWanderCycle()
+    {
+        isWaiting = false;
+        isMoving = true;
+        
         // Generate a new target within the waiting area boundaries
         Vector3 halfSize = waitingAreaSize * 0.5f;
         Vector3 randomOffset = new Vector3(
             Random.Range(-halfSize.x, halfSize.x),
-            0,
+            heightOffset,
             Random.Range(-halfSize.z, halfSize.z)
         );
         
         currentTarget = waitingAreaCenter + randomOffset;
-        isMoving = true;
         
         if (logMovement) Debug.Log($"[CustomerVisual] New wander target: {currentTarget}");
     }
@@ -106,7 +149,9 @@ public class CustomerVisual : MonoBehaviour
     /// </summary>
     public void ReturnToSpawn()
     {
-        currentTarget = waitingAreaCenter;
+        Vector3 returnPosition = waitingAreaCenter;
+        returnPosition.y += heightOffset;
+        currentTarget = returnPosition;
         enableWandering = false;
         isMoving = true;
         
@@ -155,8 +200,19 @@ public class CustomerVisual : MonoBehaviour
         if (!enabled)
         {
             isMoving = false;
+            isWaiting = false;
         }
         if (logMovement) Debug.Log($"[CustomerVisual] Wandering enabled: {enabled}");
+    }
+    
+    /// <summary>
+    /// Return customer to waiting area and resume roaming
+    /// </summary>
+    public void ReturnToWaitingArea()
+    {
+        SetWanderingEnabled(true);
+        StartNewWanderCycle();
+        if (logMovement) Debug.Log($"[CustomerVisual] Returning to waiting area and resuming roaming");
     }
     
     void OnDrawGizmos()
@@ -178,3 +234,4 @@ public class CustomerVisual : MonoBehaviour
         }
     }
 }
+

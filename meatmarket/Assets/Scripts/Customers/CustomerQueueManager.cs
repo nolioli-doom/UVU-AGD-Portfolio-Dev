@@ -365,17 +365,17 @@ public class CustomerQueueManager : MonoBehaviour
         Gizmos.color = Color.cyan;
         DrawEllipse(center, queueRadiusX, queueRadiusZ, queueHeight);
         
-        // Draw current selection
+        // Draw current selection (shows which customer is at slot 0/front)
         if (queuedCustomers.Count > 0 && currentIndex < queuedCustomers.Count)
         {
             Gizmos.color = Color.red;
-            float angle = (360f / queuedCustomers.Count) * currentIndex - 90f;
-            Vector3 offset = new Vector3(
-                Mathf.Cos(angle * Mathf.Deg2Rad) * queueRadiusX,
-                queueHeight,
-                Mathf.Sin(angle * Mathf.Deg2Rad) * queueRadiusZ
-            );
-            Gizmos.DrawWireSphere(center + offset, 0.4f);
+            // Get the actual customer at the front (slot 0)
+            CustomerVisual frontCustomer = queuedCustomers[currentIndex];
+            if (frontCustomer != null)
+            {
+                // Draw at the customer's actual position
+                Gizmos.DrawWireSphere(frontCustomer.transform.position, 0.4f);
+            }
         }
     }
     
