@@ -1,6 +1,7 @@
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// Simple fixed display for 3 pinned orders in the Butchery Scene.
@@ -13,21 +14,21 @@ public class PinnedOrdersDisplay : MonoBehaviour
 
     [Header("Order Slot 1")]
     public GameObject slot1Root;
-    public Text slot1CustomerName;
-    public Text slot1Timer;
-    public Text slot1Items;
+    public TextMeshProUGUI slot1CustomerName;
+    public TextMeshProUGUI slot1Timer;
+    public TextMeshProUGUI slot1Items;
 
     [Header("Order Slot 2")]
     public GameObject slot2Root;
-    public Text slot2CustomerName;
-    public Text slot2Timer;
-    public Text slot2Items;
+    public TextMeshProUGUI slot2CustomerName;
+    public TextMeshProUGUI slot2Timer;
+    public TextMeshProUGUI slot2Items;
 
     [Header("Order Slot 3")]
     public GameObject slot3Root;
-    public Text slot3CustomerName;
-    public Text slot3Timer;
-    public Text slot3Items;
+    public TextMeshProUGUI slot3CustomerName;
+    public TextMeshProUGUI slot3Timer;
+    public TextMeshProUGUI slot3Items;
 
     [Header("Refresh")]
     [Tooltip("How often to refresh display (0 = every frame)")]
@@ -36,12 +37,32 @@ public class PinnedOrdersDisplay : MonoBehaviour
     [Header("Styling")]
     public Color activeColor = Color.white;
     public Color inactiveColor = Color.gray;
+    
+    [Header("Text Colors")]
+    public Color customerNameColor = Color.white;
+    public Color timerColor = Color.white;
+    public Color itemsColor = Color.white;
+    
+    [Header("Species Colors")]
+    public Color dogColor = Color.red;
+    public Color catColor = Color.green;
+    public Color bunnyColor = Color.blue;
+    
+    [Header("Timer Colors (Urgency-Based)")]
+    public Color timerColorNormal = Color.white;
+    public Color timerColorWarning = Color.yellow;
+    public Color timerColorUrgent = Color.red;
+    
+    [Tooltip("Time threshold for warning color (seconds)")]
+    public float timerWarningThreshold = 60f;
+    
+    [Tooltip("Time threshold for urgent color (seconds)")]
+    public float timerUrgentThreshold = 30f;
 
     [Header("Debug")]
     public bool logUpdates = false;
 
     private float refreshTimer = 0f;
-    private float[] orderTimers = new float[3]; // Track remaining time for each order
 
     void Update()
     {
@@ -53,9 +74,6 @@ public class PinnedOrdersDisplay : MonoBehaviour
             refreshTimer = 0f;
             RefreshDisplay();
         }
-
-        // Tick down timers for active orders
-        UpdateTimers();
     }
 
     /// <summary>
@@ -69,34 +87,30 @@ public class PinnedOrdersDisplay : MonoBehaviour
             return;
         }
 
-        var pinnedOrders = orderManager.GetPinnedOrders();
+        // Get pinned orders directly from slots
+        var slot0Order = orderManager.pinnedSlot0;
+        var slot1Order = orderManager.pinnedSlot1;
+        var slot2Order = orderManager.pinnedSlot2;
 
-        if (logUpdates)
-        {
-            Debug.Log($"[PinnedOrdersDisplay] Refreshing with {pinnedOrders.Count} pinned orders");
-        }
-
+        // Update slot 0
+        UpdateSlot(0, slot0Order, slot1Root, slot1CustomerName, slot1Timer, slot1Items);
+        
         // Update slot 1
-        UpdateSlot(0, pinnedOrders, slot1Root, slot1CustomerName, slot1Timer, slot1Items);
+        UpdateSlot(1, slot1Order, slot2Root, slot2CustomerName, slot2Timer, slot2Items);
         
         // Update slot 2
-        UpdateSlot(1, pinnedOrders, slot2Root, slot2CustomerName, slot2Timer, slot2Items);
-        
-        // Update slot 3
-        UpdateSlot(2, pinnedOrders, slot3Root, slot3CustomerName, slot3Timer, slot3Items);
+        UpdateSlot(2, slot2Order, slot3Root, slot3CustomerName, slot3Timer, slot3Items);
     }
 
     /// <summary>
     /// Update a single order slot
     /// </summary>
-    void UpdateSlot(int slotIndex, System.Collections.Generic.List<CustomerOrder> orders, 
-                    GameObject slotRoot, Text nameText, Text timerText, Text itemsText)
+    void UpdateSlot(int slotIndex, CustomerOrder order, 
+                    GameObject slotRoot, TextMeshProUGUI nameText, TextMeshProUGUI timerText, TextMeshProUGUI itemsText)
     {
-        if (slotIndex < orders.Count)
+        if (order != null)
         {
             // Order exists for this slot
-            var order = orders[slotIndex];
-            
             if (slotRoot != null) slotRoot.SetActive(true);
 
             // Update customer name
@@ -105,25 +119,25 @@ public class PinnedOrdersDisplay : MonoBehaviour
                 string archetypeName = (order.archetype != null && !string.IsNullOrEmpty(order.archetype.displayName))
                     ? order.archetype.displayName
                     : "—";
-                nameText.text = $"[{slotIndex + 1}] {order.customerName}\n({archetypeName})";
-                nameText.color = activeColor;
+                nameText.text = $"{slotIndex + 1}. {archetypeName}";
+                nameText.color = customerNameColor;
             }
 
             // Update timer
             if (timerText != null)
             {
-                float timeRemaining = orderTimers[slotIndex];
+                float timeRemaining = order.GetRemainingTime();
                 int minutes = Mathf.FloorToInt(timeRemaining / 60f);
                 int seconds = Mathf.FloorToInt(timeRemaining % 60f);
                 timerText.text = $"Time: {minutes:00}:{seconds:00}";
                 
                 // Color code based on urgency
-                if (timeRemaining < 30f)
-                    timerText.color = Color.red;
-                else if (timeRemaining < 60f)
-                    timerText.color = Color.yellow;
+                if (timeRemaining < timerUrgentThreshold)
+                    timerText.color = timerColorUrgent;
+                else if (timeRemaining < timerWarningThreshold)
+                    timerText.color = timerColorWarning;
                 else
-                    timerText.color = activeColor;
+                    timerText.color = timerColorNormal;
             }
 
             // Update items with progress
@@ -136,70 +150,29 @@ public class PinnedOrdersDisplay : MonoBehaviour
                 {
                     string checkmark = item.IsComplete ? "✓" : "○";
                     string progress = $"{item.currentQuantity}/{item.quantity}";
-                    sb.AppendLine($"{checkmark} {progress}× {item.species} {item.partType} (≥{item.minQuality})");
+                    string partTypeDisplay = item.partType.ToString().Replace("_", " ");
+                    
+                    // Get species color
+                    Color speciesColor = GetSpeciesColor(item.species);
+                    string colorHex = ColorUtility.ToHtmlStringRGB(speciesColor);
+                    
+                    // Format: "○ 0/1× Hand" with Hand colored by species (red/green/blue)
+                    string itemText = $"{checkmark} {progress}× <color=#{colorHex}>{partTypeDisplay}</color>";
+                    
+                    sb.AppendLine(itemText);
                 }
                 
                 itemsText.text = sb.ToString().TrimEnd();
-                itemsText.color = activeColor;
+                itemsText.color = itemsColor;
             }
         }
         else
         {
-            // No order for this slot - hide or show empty state
+            // No order for this slot - completely hide
             if (slotRoot != null) slotRoot.SetActive(false);
-            
-            if (nameText != null)
-            {
-                nameText.text = $"[{slotIndex + 1}] (Empty Slot)";
-                nameText.color = inactiveColor;
-            }
-            
-            if (timerText != null)
-            {
-                timerText.text = "—";
-                timerText.color = inactiveColor;
-            }
-            
-            if (itemsText != null)
-            {
-                itemsText.text = "No order pinned";
-                itemsText.color = inactiveColor;
-            }
         }
     }
 
-    /// <summary>
-    /// Update timers for active orders
-    /// </summary>
-    void UpdateTimers()
-    {
-        if (orderManager == null) return;
-
-        var pinnedOrders = orderManager.GetPinnedOrders();
-        
-        for (int i = 0; i < 3; i++)
-        {
-            if (i < pinnedOrders.Count)
-            {
-                // Initialize timer if needed
-                if (orderTimers[i] <= 0f)
-                {
-                    orderTimers[i] = pinnedOrders[i].timeLimitSeconds;
-                }
-                
-                // Tick down (only for non-complete orders)
-                if (!IsOrderComplete(pinnedOrders[i]))
-                {
-                    orderTimers[i] -= Time.deltaTime;
-                    orderTimers[i] = Mathf.Max(0f, orderTimers[i]);
-                }
-            }
-            else
-            {
-                orderTimers[i] = 0f;
-            }
-        }
-    }
 
     /// <summary>
     /// Check if all items in an order are complete
@@ -222,20 +195,34 @@ public class PinnedOrdersDisplay : MonoBehaviour
     }
 
     /// <summary>
-    /// Reset timers (call when new orders are generated)
+    /// Force immediate refresh (call from button if needed)
     /// </summary>
     public void ResetTimers()
     {
-        for (int i = 0; i < 3; i++)
-        {
-            orderTimers[i] = 0f;
-        }
         RefreshDisplay();
     }
 
     void OnEnable()
     {
-        ResetTimers();
+        RefreshDisplay();
+    }
+    
+    /// <summary>
+    /// Get color for a species
+    /// </summary>
+    Color GetSpeciesColor(SpeciesType species)
+    {
+        switch (species)
+        {
+            case SpeciesType.Dog:
+                return dogColor;
+            case SpeciesType.Cat:
+                return catColor;
+            case SpeciesType.Bunny:
+                return bunnyColor;
+            default:
+                return itemsColor;
+        }
     }
 }
 

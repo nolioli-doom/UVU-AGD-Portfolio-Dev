@@ -56,7 +56,7 @@ public class BodyPartTree : MonoBehaviour
             return;
         }
 
-        if (logSegmentStates) Debug.Log($"[BodyPartTree] Found {allCutZones.Count} CutZones, building hierarchy...");
+        // Debug.Log($"[BodyPartTree] Found {allCutZones.Count} CutZones, building hierarchy...");
 
         // Create all virtual segments
         CreateAllSegments();
@@ -64,14 +64,14 @@ public class BodyPartTree : MonoBehaviour
         // Map cut zones to segments
         MapCutZonesToSegments();
 
-        if (logSegmentStates)
-        {
-            Debug.Log($"[BodyPartTree] Hierarchy built with {segments.Count} segments");
-            foreach (var seg in segments.Values)
-            {
-                Debug.Log($"[BodyPartTree]   {seg}");
-            }
-        }
+        // if (logSegmentStates)
+        // {
+        //     Debug.Log($"[BodyPartTree] Hierarchy built with {segments.Count} segments");
+        //     foreach (var seg in segments.Values)
+        //     {
+        //         Debug.Log($"[BodyPartTree]   {seg}");
+        //     }
+        // }
     }
 
     /// <summary>

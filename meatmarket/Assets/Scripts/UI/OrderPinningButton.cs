@@ -32,90 +32,29 @@ public class OrderPinningButton : MonoBehaviour
 
     /// <summary>
     /// Toggle pin state (wire to button OnClick)
+    /// NOTE: This script is obsolete - use CustomerDetailUI instead
     /// </summary>
     public void TogglePin()
     {
-        if (orderManager == null)
-        {
-            Debug.LogError("[OrderPinningButton] OrderManager not assigned!");
-            return;
-        }
-
-        // Check if this order exists
-        if (orderIndex < 0 || orderIndex >= orderManager.allOrders.Count)
-        {
-            Debug.LogWarning($"[OrderPinningButton] Invalid order index: {orderIndex}");
-            OnPinFailed?.Invoke();
-            return;
-        }
-
-        // Check if currently pinned
-        if (orderManager.IsOrderPinned(orderIndex))
-        {
-            // Unpin
-            bool success = orderManager.UnpinOrderAtIndex(orderIndex);
-            if (success)
-            {
-                OnUnpin?.Invoke();
-                UpdateVisuals();
-            }
-        }
-        else
-        {
-            // Pin
-            bool success = orderManager.PinOrderAtIndex(orderIndex);
-            if (success)
-            {
-                OnPinSuccess?.Invoke();
-                UpdateVisuals();
-            }
-            else
-            {
-                OnPinFailed?.Invoke();
-            }
-        }
+        Debug.LogWarning("[OrderPinningButton] This script is obsolete. Use CustomerDetailUI instead.");
+        // This component is no longer compatible with the new slot-based system
+        // Orders must be pinned through the CustomerDetailUI interface
     }
 
     /// <summary>
     /// Update button visuals based on pin state
+    /// NOTE: This script is obsolete
     /// </summary>
     public void UpdateVisuals()
     {
-        if (orderManager == null) return;
-
-        bool exists = orderIndex >= 0 && orderIndex < orderManager.allOrders.Count;
-        bool isPinned = exists && orderManager.IsOrderPinned(orderIndex);
-
-        // Update label
+        // This component is no longer compatible with the new system
         if (buttonLabel != null)
         {
-            if (exists)
-            {
-                var order = orderManager.GetOrder(orderIndex);
-                string status = isPinned ? "[PINNED]" : "";
-                buttonLabel.text = $"Order {orderIndex + 1}: {order.customerName} {status}";
-            }
-            else
-            {
-                buttonLabel.text = $"Order {orderIndex + 1}: (None)";
-            }
+            buttonLabel.text = "OBSOLETE";
         }
-
-        // Update background color
         if (buttonBackground != null)
         {
-            if (!exists)
-            {
-                buttonBackground.color = disabledColor;
-            }
-            else if (isPinned)
-            {
-                buttonBackground.color = pinnedColor;
-            }
-            else
-            {
-                buttonBackground.color = unpinnedColor;
-            }
+            buttonBackground.color = disabledColor;
         }
     }
 }

@@ -68,15 +68,15 @@ public class OrderGenerator : MonoBehaviour
             baseTime *= archetype.patienceMultiplier;
             order.timeLimitSeconds = Mathf.Clamp(baseTime, 20f, 300f);
 
-            // Items count
-            int items = UnityEngine.Random.Range(diff.itemsPerOrderRange.x, diff.itemsPerOrderRange.y + 1);
+            // Total pieces count (each piece is a separate item, even if same type)
+            int totalPieces = UnityEngine.Random.Range(diff.itemsPerOrderRange.x, diff.itemsPerOrderRange.y + 1);
 
             // Force within-customer same species sometimes
             SpeciesType? lockedSpecies = null;
             if (UnityEngine.Random.value < diff.sameSpeciesBias)
                 lockedSpecies = themeSpecies[rng.Next(themeSpecies.Count)];
 
-            for (int k = 0; k < items; k++)
+            for (int k = 0; k < totalPieces; k++)
             {
                 SpeciesType s;
                 if (lockedSpecies.HasValue) s = lockedSpecies.Value;
@@ -87,13 +87,8 @@ public class OrderGenerator : MonoBehaviour
                 var def = speciesDefs.First(d => d.species == s);
                 OrderPartType partType = PickPartType(def);
 
-                // Quantity: usually within yield; sometimes force > yield to require extra body
-                int yield = def.GetYield(partType);
-                int qty;
-                if (UnityEngine.Random.value < diff.requireExtraBodyChance && yield > 0)
-                    qty = yield + UnityEngine.Random.Range(1, 2 + 1); // exceed by 1–2
-                else
-                    qty = Mathf.Max(1, UnityEngine.Random.Range(1, Mathf.Max(2, yield + 1)));
+                // Each piece is quantity 1 (no more quantity system)
+                int qty = 1;
 
                 // Quality: bias via curve & archetype precision
                 var q = RollQuality(diff.qualityCurve, archetype.precisionBias);
@@ -141,6 +136,18 @@ public class OrderGenerator : MonoBehaviour
 
     // ===== Helpers =====
 
+    /// <summary>
+    /// Get the difficulty name for a given day index
+    /// </summary>
+    public string GetDifficultyName(int dayIndex)
+    {
+        if (difficultyByDay == null || difficultyByDay.Count == 0)
+            return "Unknown";
+        
+        int clampedIndex = Mathf.Clamp(dayIndex, 0, difficultyByDay.Count - 1);
+        return difficultyByDay[clampedIndex] != null ? difficultyByDay[clampedIndex].name : "Unknown";
+    }
+
     private struct WeightedSpecies { public SpeciesType species; public float weight; public PlushieSpeciesSO def; }
 
     private List<WeightedSpecies> BuildWeightedSpeciesList()
@@ -180,8 +187,8 @@ public class OrderGenerator : MonoBehaviour
 
     private OrderPartType PickPartType(PlushieSpeciesSO def)
     {
-        // Pick part types that actually have yields
-        var valid = def.yields.Where(y => y.count > 0).Select(y => y.partType).ToList();
+        // Pick from all available part types for this species
+        var valid = def.yields.Select(y => y.partType).ToList();
         if (valid.Count == 0) return OrderPartType.Scrap;
         
         // Mild bias toward limb parts to create overlap opportunities
@@ -214,13 +221,13 @@ public class OrderGenerator : MonoBehaviour
 
     private Dictionary<SpeciesType, int> EstimateBodiesNeeded(List<CustomerOrder> orders)
     {
-        // Greedy estimate: for each species/partType, sum quantities and divide by per-body yields
+        // Simple estimate: count total pieces needed
         var map = new Dictionary<(SpeciesType, OrderPartType), int>();
         foreach (var o in orders)
         foreach (var it in o.items)
         {
             var key = (it.species, it.partType);
-            map[key] = map.TryGetValue(key, out var v) ? v + it.quantity : it.quantity;
+            map[key] = map.TryGetValue(key, out var v) ? v + 1 : 1;
         }
 
         var bodiesBySpecies = new Dictionary<SpeciesType, int>();
@@ -287,7 +294,7 @@ public class OrderGenerator : MonoBehaviour
                 items = new List<OrderItem>()
             };
             foreach (var it in o.items)
-                c.items.Add(new OrderItem { species = it.species, partType = it.partType, quantity = it.quantity, minQuality = it.minQuality });
+                c.items.Add(new OrderItem { species = it.species, partType = it.partType, quantity = 1, minQuality = it.minQuality });
             clone.orders.Add(c);
         }
         return clone;
