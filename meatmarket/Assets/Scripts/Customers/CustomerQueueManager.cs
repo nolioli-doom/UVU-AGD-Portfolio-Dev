@@ -219,32 +219,6 @@ public class CustomerQueueManager : MonoBehaviour
         return queuedCustomers[currentIndex];
     }
     
-    /// <summary>
-    /// Pin the current customer's order
-    /// </summary>
-    public bool PinCurrentOrder(OrderManagerSO orderManager)
-    {
-        CustomerVisual currentCustomer = GetCurrentCustomer();
-        if (currentCustomer == null || orderManager == null) return false;
-        
-        CustomerOrder order = currentCustomer.GetOrder();
-        if (order == null) return false;
-        
-        bool success = orderManager.PinOrder(order);
-        if (success)
-        {
-            // Mark customer as pinned and remove from queue
-            currentCustomer.SetPinned(true);
-            RemoveCustomerFromQueue(currentCustomer);
-            
-            if (logQueueActions)
-            {
-                Debug.Log($"[CustomerQueueManager] Pinned order for customer: {order.customerName}");
-            }
-        }
-        
-        return success;
-    }
     
     /// <summary>
     /// Get all customers currently in the queue

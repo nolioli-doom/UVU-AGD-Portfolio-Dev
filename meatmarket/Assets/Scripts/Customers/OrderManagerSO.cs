@@ -5,6 +5,7 @@ using UnityEngine;
 /// <summary>
 /// ScriptableObject that manages all orders for the current day.
 /// Persists across scenes and tracks pinning state.
+/// Uses slot-based pinning system (max 3 slots).
 /// Automatically clears on game start to prevent persistent test data.
 /// </summary>
 [CreateAssetMenu(menuName = "Butchery/Order Manager")]
@@ -13,125 +14,219 @@ public class OrderManagerSO : ScriptableObject
     [Header("Configuration")]
     [Min(1)] public int maxPinnedOrders = 3;
 
-    [Header("Current State")]
-    public List<CustomerOrder> allOrders = new List<CustomerOrder>();
-    public List<int> pinnedOrderIndices = new List<int>();  // Indices of pinned orders
+    [Header("Order States (Read-Only Inspector View)")]
+    [Tooltip("All unpinned orders that can be pinned")]
+    [SerializeField] private List<CustomerOrder> waitingOrders = new List<CustomerOrder>();
+    
+    [Tooltip("Slot 0: First pinned order (or null if empty)")]
+    public CustomerOrder pinnedSlot0;
+    
+    [Tooltip("Slot 1: Second pinned order (or null if empty)")]
+    public CustomerOrder pinnedSlot1;
+    
+    [Tooltip("Slot 2: Third pinned order (or null if empty)")]
+    public CustomerOrder pinnedSlot2;
+    
+    [Tooltip("Orders that have been completed")]
+    [SerializeField] private List<CustomerOrder> completedOrders = new List<CustomerOrder>();
 
     [Header("Debug")]
     public bool logActions = false;
 
+    // Internal tracking
+    private CustomerOrder[] pinnedOrdersSlots;
+    private Dictionary<CustomerOrder, int> orderToSlotMap = new Dictionary<CustomerOrder, int>();
+
     /// <summary>
-    /// Automatically clear data when the ScriptableObject is loaded.
-    /// This prevents persistent test data from previous play sessions.
+    /// Initialize arrays and clear data on startup
     /// </summary>
     void OnEnable()
     {
-        // Clear any existing data to ensure fresh start
-        allOrders.Clear();
-        pinnedOrderIndices.Clear();
+        // Initialize slot array
+        if (pinnedOrdersSlots == null)
+        {
+            pinnedOrdersSlots = new CustomerOrder[3];
+        }
+        
+        // Sync public inspector fields with internal array
+        SyncInspectorFields();
+        
+        // Clear all data for fresh start
+        waitingOrders.Clear();
+        pinnedOrdersSlots[0] = null;
+        pinnedOrdersSlots[1] = null;
+        pinnedOrdersSlots[2] = null;
+        completedOrders.Clear();
+        orderToSlotMap.Clear();
         
         if (logActions) Debug.Log("[OrderManagerSO] Auto-cleared on enable - fresh start guaranteed");
     }
 
     /// <summary>
     /// Set all orders for the day (called by OrderGenerator)
+    /// All orders start in waiting state
     /// </summary>
     public void SetOrders(List<CustomerOrder> orders)
     {
-        allOrders = orders;
-        pinnedOrderIndices.Clear();
+        waitingOrders = new List<CustomerOrder>(orders);
+        
+        // Clear all pinned and completed orders
+        for (int i = 0; i < 3; i++)
+        {
+            pinnedOrdersSlots[i] = null;
+        }
+        completedOrders.Clear();
+        orderToSlotMap.Clear();
         
         // Reset all order progress
-        foreach (var order in allOrders)
+        foreach (var order in waitingOrders)
         {
-            foreach (var item in order.items)
+            if (order != null && order.items != null)
             {
-                item.ResetProgress();
+                foreach (var item in order.items)
+                {
+                    item.ResetProgress();
+                }
             }
         }
         
-        if (logActions) Debug.Log($"[OrderManagerSO] Set {orders.Count} orders for the day");
-    }
-
-    /// <summary>
-    /// Pin an order by index. Returns true if successful.
-    /// </summary>
-    public bool PinOrderAtIndex(int index)
-    {
-        if (index < 0 || index >= allOrders.Count)
-        {
-            Debug.LogWarning($"[OrderManagerSO] Invalid order index: {index}");
-            return false;
-        }
-
-        if (pinnedOrderIndices.Contains(index))
-        {
-            if (logActions) Debug.Log($"[OrderManagerSO] Order {index} is already pinned");
-            return false;
-        }
-
-        if (pinnedOrderIndices.Count >= maxPinnedOrders)
-        {
-            if (logActions) Debug.Log($"[OrderManagerSO] Cannot pin order {index}: max ({maxPinnedOrders}) reached");
-            return false;
-        }
-
-        pinnedOrderIndices.Add(index);
-        if (logActions) Debug.Log($"[OrderManagerSO] Pinned order {index}: \"{allOrders[index].customerName}\"");
-        return true;
-    }
-
-    /// <summary>
-    /// Unpin an order by index. Returns true if successful.
-    /// </summary>
-    public bool UnpinOrderAtIndex(int index)
-    {
-        if (pinnedOrderIndices.Remove(index))
-        {
-            if (logActions) Debug.Log($"[OrderManagerSO] Unpinned order {index}");
-            return true;
-        }
+        SyncInspectorFields();
         
-        if (logActions) Debug.Log($"[OrderManagerSO] Order {index} was not pinned");
-        return false;
+        if (logActions) Debug.Log($"[OrderManagerSO] Set {orders.Count} orders for the day (all in waiting state)");
+    }
+    
+    /// <summary>
+    /// Sync internal slot array with inspector-visible fields
+    /// </summary>
+    private void SyncInspectorFields()
+    {
+        pinnedSlot0 = pinnedOrdersSlots[0];
+        pinnedSlot1 = pinnedOrdersSlots[1];
+        pinnedSlot2 = pinnedOrdersSlots[2];
+    }
+
+    /// <summary>
+    /// Pin an order to the first available slot (returns slot index or -1 if failed)
+    /// </summary>
+    public int PinOrder(CustomerOrder order)
+    {
+        if (order == null)
+        {
+            if (logActions) Debug.LogWarning("[OrderManagerSO] Cannot pin null order");
+            return -1;
+        }
+
+        // Check if already pinned
+        if (orderToSlotMap.ContainsKey(order))
+        {
+            int slotIndex = orderToSlotMap[order];
+            if (logActions) Debug.Log($"[OrderManagerSO] Order \"{order.customerName}\" already pinned in slot {slotIndex}");
+            return slotIndex;
+        }
+
+        // Find first available slot
+        int availableSlot = -1;
+        for (int i = 0; i < 3; i++)
+        {
+            if (pinnedOrdersSlots[i] == null)
+            {
+                availableSlot = i;
+                break;
+            }
+        }
+
+        if (availableSlot == -1)
+        {
+            if (logActions) Debug.Log($"[OrderManagerSO] Cannot pin order \"{order.customerName}\": all slots full");
+            return -1;
+        }
+
+        // Pin to slot
+        pinnedOrdersSlots[availableSlot] = order;
+        orderToSlotMap[order] = availableSlot;
+
+        // Remove from waiting orders
+        waitingOrders.Remove(order);
+
+        SyncInspectorFields();
+
+        if (logActions) Debug.Log($"[OrderManagerSO] Pinned order \"{order.customerName}\" to slot {availableSlot}");
+        
+        return availableSlot;
+    }
+
+    /// <summary>
+    /// Get all currently pinned orders in slot order
+    /// </summary>
+    public List<CustomerOrder> GetPinnedOrders()
+    {
+        List<CustomerOrder> pinned = new List<CustomerOrder>();
+        for (int i = 0; i < 3; i++)
+        {
+            if (pinnedOrdersSlots[i] != null)
+            {
+                pinned.Add(pinnedOrdersSlots[i]);
+            }
+        }
+        return pinned;
     }
 
     /// <summary>
     /// Check if an order is pinned
     /// </summary>
-    public bool IsOrderPinned(int index)
+    public bool IsOrderPinned(CustomerOrder order)
     {
-        return pinnedOrderIndices.Contains(index);
+        if (order == null) return false;
+        return orderToSlotMap.ContainsKey(order);
     }
 
     /// <summary>
-    /// Get all currently pinned orders (in pinning order)
+    /// Get the slot index for a pinned order (returns -1 if not pinned)
     /// </summary>
-    public List<CustomerOrder> GetPinnedOrders()
+    public int GetOrderSlotIndex(CustomerOrder order)
     {
-        return pinnedOrderIndices
-            .Where(i => i >= 0 && i < allOrders.Count)
-            .Select(i => allOrders[i])
-            .ToList();
+        if (order == null) return -1;
+        if (orderToSlotMap.ContainsKey(order))
+        {
+            return orderToSlotMap[order];
+        }
+        return -1;
     }
 
     /// <summary>
-    /// Get a specific order by index
+    /// Mark an order as complete and clear its slot
+    /// Called by the deposit system when an order is fulfilled
     /// </summary>
-    public CustomerOrder GetOrder(int index)
+    public void CompleteOrder(CustomerOrder order)
     {
-        if (index >= 0 && index < allOrders.Count)
-            return allOrders[index];
-        return null;
+        if (order == null) return;
+
+        if (!orderToSlotMap.ContainsKey(order))
+        {
+            if (logActions) Debug.LogWarning($"[OrderManagerSO] Cannot complete order \"{order.customerName}\": not pinned");
+            return;
+        }
+
+        int slotIndex = orderToSlotMap[order];
+
+        // Remove from pinned slot
+        pinnedOrdersSlots[slotIndex] = null;
+        orderToSlotMap.Remove(order);
+
+        // Add to completed orders
+        completedOrders.Add(order);
+
+        SyncInspectorFields();
+
+        if (logActions) Debug.Log($"[OrderManagerSO] Completed order \"{order.customerName}\" (cleared slot {slotIndex})");
     }
 
     /// <summary>
     /// Check if an order is complete (all items fulfilled)
     /// </summary>
-    public bool IsOrderComplete(int index)
+    public bool IsOrderComplete(CustomerOrder order)
     {
-        var order = GetOrder(index);
-        if (order == null) return false;
+        if (order == null || order.items == null) return false;
         return order.items.All(item => item.IsComplete);
     }
 
@@ -140,8 +235,14 @@ public class OrderManagerSO : ScriptableObject
     /// </summary>
     public void ClearAllOrders()
     {
-        allOrders.Clear();
-        pinnedOrderIndices.Clear();
+        waitingOrders.Clear();
+        for (int i = 0; i < 3; i++)
+        {
+            pinnedOrdersSlots[i] = null;
+        }
+        completedOrders.Clear();
+        orderToSlotMap.Clear();
+        SyncInspectorFields();
         if (logActions) Debug.Log("[OrderManagerSO] Cleared all orders");
     }
 
@@ -151,64 +252,61 @@ public class OrderManagerSO : ScriptableObject
     [ContextMenu("Force Clear All Data")]
     public void ForceClearAllData()
     {
-        allOrders.Clear();
-        pinnedOrderIndices.Clear();
-        Debug.Log("[OrderManagerSO] FORCE CLEARED all data - this should fix the persistent test orders issue");
-    }
-
-    /// <summary>
-    /// Pin an order by CustomerOrder object. Returns true if successful.
-    /// </summary>
-    public bool PinOrder(CustomerOrder order)
-    {
-        if (order == null) return false;
-        
-        int index = allOrders.IndexOf(order);
-        if (index == -1)
+        waitingOrders.Clear();
+        for (int i = 0; i < 3; i++)
         {
-            if (logActions) Debug.LogWarning("[OrderManagerSO] Order not found in allOrders list");
-            return false;
+            pinnedOrdersSlots[i] = null;
         }
-        
-        return PinOrderAtIndex(index);
+        completedOrders.Clear();
+        orderToSlotMap.Clear();
+        SyncInspectorFields();
+        Debug.Log("[OrderManagerSO] FORCE CLEARED all data");
     }
 
     /// <summary>
-    /// Unpin an order by CustomerOrder object. Returns true if successful.
-    /// </summary>
-    public bool UnpinOrder(CustomerOrder order)
-    {
-        if (order == null) return false;
-        
-        int index = allOrders.IndexOf(order);
-        if (index == -1)
-        {
-            if (logActions) Debug.LogWarning("[OrderManagerSO] Order not found in allOrders list");
-            return false;
-        }
-        
-        return UnpinOrderAtIndex(index);
-    }
-
-    /// <summary>
-    /// Check if an order is pinned by CustomerOrder object
-    /// </summary>
-    public bool IsOrderPinned(CustomerOrder order)
-    {
-        if (order == null) return false;
-        
-        int index = allOrders.IndexOf(order);
-        if (index == -1) return false;
-        
-        return IsOrderPinned(index);
-    }
-
-    /// <summary>
-    /// Get count of available pin slots
+    /// Get count of available pin slots (0, 1, 2, or 3)
     /// </summary>
     public int GetAvailablePinSlots()
     {
-        return maxPinnedOrders - pinnedOrderIndices.Count;
+        int count = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            if (pinnedOrdersSlots[i] == null)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /// <summary>
+    /// Get all waiting orders
+    /// </summary>
+    public List<CustomerOrder> GetWaitingOrders()
+    {
+        return new List<CustomerOrder>(waitingOrders);
+    }
+
+    /// <summary>
+    /// Get all completed orders
+    /// </summary>
+    public List<CustomerOrder> GetCompletedOrders()
+    {
+        return new List<CustomerOrder>(completedOrders);
+    }
+    
+    /// <summary>
+    /// Update timers for all pinned orders (call from singleton every frame)
+    /// </summary>
+    public void UpdateTimers()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (pinnedOrdersSlots[i] != null)
+            {
+                pinnedOrdersSlots[i].TickTimer(Time.deltaTime);
+            }
+        }
     }
 }
 

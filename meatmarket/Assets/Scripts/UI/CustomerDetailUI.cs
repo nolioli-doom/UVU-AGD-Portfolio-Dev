@@ -128,33 +128,56 @@ public class CustomerDetailUI : MonoBehaviour
     
     private void OnPinButtonClicked()
     {
-        if (currentCustomer == null) return;
+        if (currentCustomer == null || orderManager == null) return;
         
         CustomerOrder order = currentCustomer.GetOrder();
         if (order == null) return;
         
-        if (isOrderPinned)
+        // Check if already pinned
+        bool alreadyPinned = orderManager.IsOrderPinned(order);
+        
+        if (alreadyPinned)
         {
-            // Unpin the order
-            bool success = orderManager.UnpinOrder(order);
-            if (success)
+            // Order is already pinned - disable button
+            if (logUIUpdates) Debug.Log("[CustomerDetailUI] Order is already pinned");
+            UpdatePinButtonState(order);
+            return;
+        }
+        
+        // Check if slots are available
+        int availableSlots = orderManager.GetAvailablePinSlots();
+        if (availableSlots <= 0)
+        {
+            if (logUIUpdates) Debug.Log("[CustomerDetailUI] Cannot pin: all slots full (max 3)");
+            return;
+        }
+        
+        // Pin the order (returns slot index or -1)
+        int slotIndex = orderManager.PinOrder(order);
+        if (slotIndex >= 0)
+        {
+            // Successfully pinned
+            isOrderPinned = true;
+            currentCustomer.SetPinned(true);
+            
+            // Remove customer from queue via queue manager
+            queueManager?.RemoveCustomerFromQueue(currentCustomer);
+            
+            UpdatePinButtonText();
+            
+            // Immediately refresh the pinned orders display (if it exists)
+            PinnedOrdersDisplay pinnedDisplay = FindObjectOfType<PinnedOrdersDisplay>();
+            if (pinnedDisplay != null)
             {
-                isOrderPinned = false;
-                currentCustomer.SetPinned(false);
-                UpdatePinButtonText();
-                if (logUIUpdates) Debug.Log("[CustomerDetailUI] Order unpinned");
+                pinnedDisplay.RefreshDisplay();
+                if (logUIUpdates) Debug.Log("[CustomerDetailUI] Refreshed PinnedOrdersDisplay");
             }
+            
+            if (logUIUpdates) Debug.Log($"[CustomerDetailUI] Pinned order to slot {slotIndex + 1}");
         }
         else
         {
-            // Pin the order using queue manager
-            bool success = queueManager.PinCurrentOrder(orderManager);
-            if (success)
-            {
-                isOrderPinned = true;
-                UpdatePinButtonText();
-                if (logUIUpdates) Debug.Log("[CustomerDetailUI] Order pinned");
-            }
+            if (logUIUpdates) Debug.Log("[CustomerDetailUI] Failed to pin order");
         }
     }
     
@@ -255,12 +278,17 @@ public class CustomerDetailUI : MonoBehaviour
     
     private void UpdatePinButtonState(CustomerOrder order)
     {
-        if (pinButton == null) return;
+        if (pinButton == null || orderManager == null) return;
         
         // Check if this order is pinned
         isOrderPinned = orderManager.IsOrderPinned(order);
         
-        pinButton.interactable = true;
+        // Check if slots are available
+        int availableSlots = orderManager.GetAvailablePinSlots();
+        
+        // Disable button if already pinned OR if no slots available
+        pinButton.interactable = !isOrderPinned && availableSlots > 0;
+        
         UpdatePinButtonText();
     }
     
@@ -268,7 +296,23 @@ public class CustomerDetailUI : MonoBehaviour
     {
         if (pinButtonText == null) return;
         
-        pinButtonText.text = isOrderPinned ? pinButtonTextPinned : pinButtonTextUnpinned;
+        // Show different text based on state
+        if (isOrderPinned)
+        {
+            pinButtonText.text = "Already Pinned";
+        }
+        else
+        {
+            int availableSlots = orderManager != null ? orderManager.GetAvailablePinSlots() : 0;
+            if (availableSlots <= 0)
+            {
+                pinButtonText.text = "Slots Full";
+            }
+            else
+            {
+                pinButtonText.text = pinButtonTextUnpinned;
+            }
+        }
     }
     
     private void UpdateNavigationButtons()

@@ -17,9 +17,18 @@ public class PlushieSpeciesSO : ScriptableObject
     [Serializable]
     public struct PartYield
     {
+        [Tooltip("Part type (e.g., Upper_Arm becomes 'Upper Arm' in display)")]
         public OrderPartType partType;
         [Tooltip("Total count per body (e.g., Hand: 2 means 1 left + 1 right)")]
         [Min(0)] public int count;
+        
+        /// <summary>
+        /// Get display name with underscores replaced by spaces
+        /// </summary>
+        public string GetDisplayName()
+        {
+            return partType.ToString().Replace("_", " ");
+        }
     }
 
     // Helper lookup at runtime
