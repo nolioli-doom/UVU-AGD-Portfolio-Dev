@@ -517,6 +517,13 @@ public class CustomerSpawner : MonoBehaviour
             }
             
             if (logSpawns) Debug.Log($"[CustomerSpawner] Added {addedCount} customers to queue. Queue now has {queueManager.GetAllQueuedCustomers().Count} customers");
+            
+            // Notify CustomerDetailUI to update navigation buttons after queue rebuild
+            CustomerDetailUI detailUI = FindObjectOfType<CustomerDetailUI>();
+            if (detailUI != null)
+            {
+                detailUI.RefreshUI();
+            }
         }
         else
         {

@@ -37,6 +37,10 @@ public class CustomerQueueManager : MonoBehaviour
     private List<CustomerVisual> queuedCustomers = new List<CustomerVisual>();
     private int currentIndex = 0; // Index of currently selected customer
     
+    // Track active move coroutines and their intended targets so we can "animation cancel"
+    private readonly Dictionary<CustomerVisual, Coroutine> customerToMoveRoutine = new Dictionary<CustomerVisual, Coroutine>();
+    private readonly Dictionary<CustomerVisual, Vector3> customerToLastTarget = new Dictionary<CustomerVisual, Vector3>();
+    
     void Start()
     {
         // Auto-find queue center if not assigned
@@ -70,7 +74,8 @@ public class CustomerQueueManager : MonoBehaviour
         customer.SetWanderingEnabled(false);
         queuedCustomers.Add(customer);
         
-        // Position customer in queue
+        // Position customer in queue (cancel any previous movement just in case)
+        CancelActiveMoveIfAny(customer, snapToLastTarget: true);
         PositionCustomerInQueue(customer, queuedCustomers.Count - 1);
         
         // Set as current selection if it's the first customer
@@ -96,6 +101,11 @@ public class CustomerQueueManager : MonoBehaviour
         
         int index = queuedCustomers.IndexOf(customer);
         queuedCustomers.RemoveAt(index);
+        
+        // Stop any active queue movement and let this customer go back to roaming immediately
+        CancelActiveMoveIfAny(customer, snapToLastTarget: false);
+        customerToLastTarget.Remove(customer);
+        customer.ReturnToWaitingArea();
         
         // Adjust current index if necessary
         if (currentIndex >= queuedCustomers.Count && queuedCustomers.Count > 0)
@@ -129,6 +139,8 @@ public class CustomerQueueManager : MonoBehaviour
         
         if (logQueueActions) Debug.Log($"[CustomerQueueManager] NextCustomer: Changed from index {oldIndex} to {currentIndex}");
         
+        // Cancel current movements and snap to their last targets before new reposition
+        CancelAllActiveMovesAndSnap();
         // Reposition all customers to show current selection at front
         RepositionAllCustomers();
         
@@ -151,6 +163,8 @@ public class CustomerQueueManager : MonoBehaviour
         
         if (logQueueActions) Debug.Log($"[CustomerQueueManager] PreviousCustomer: Changed from index {oldIndex} to {currentIndex}");
         
+        // Cancel current movements and snap to their last targets before new reposition
+        CancelAllActiveMovesAndSnap();
         // Reposition all customers to show current selection at front
         RepositionAllCustomers();
         
@@ -276,8 +290,15 @@ public class CustomerQueueManager : MonoBehaviour
         
         Vector3 targetPosition = queueCenter.position + offset;
         
+        // Record target for possible snap
+        customerToLastTarget[customer] = targetPosition;
+        
+        // Cancel any ongoing move for this customer before starting a new one
+        CancelActiveMoveIfAny(customer, snapToLastTarget: false);
+        
         // Move customer to position
-        StartCoroutine(MoveCustomerToPosition(customer, targetPosition));
+        Coroutine routine = StartCoroutine(MoveCustomerToPosition(customer, targetPosition));
+        customerToMoveRoutine[customer] = routine;
     }
     
     private void RepositionAllCustomers()
@@ -308,6 +329,34 @@ public class CustomerQueueManager : MonoBehaviour
         }
         
         customer.transform.position = targetPosition;
+        // Clear bookkeeping if this was the active move
+        if (customerToMoveRoutine.TryGetValue(customer, out var routine) && routine == null)
+        {
+            // no-op, safety
+        }
+        customerToMoveRoutine.Remove(customer);
+    }
+
+    private void CancelAllActiveMovesAndSnap()
+    {
+        for (int i = 0; i < queuedCustomers.Count; i++)
+        {
+            CancelActiveMoveIfAny(queuedCustomers[i], snapToLastTarget: true);
+        }
+    }
+    
+    private void CancelActiveMoveIfAny(CustomerVisual customer, bool snapToLastTarget)
+    {
+        if (customer == null) return;
+        if (customerToMoveRoutine.TryGetValue(customer, out var routine) && routine != null)
+        {
+            StopCoroutine(routine);
+            customerToMoveRoutine.Remove(customer);
+            if (snapToLastTarget && customerToLastTarget.TryGetValue(customer, out var lastTarget))
+            {
+                customer.transform.position = lastTarget;
+            }
+        }
     }
     
     void OnDrawGizmos()

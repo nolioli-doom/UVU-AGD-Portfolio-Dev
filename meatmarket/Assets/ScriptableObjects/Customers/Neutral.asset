@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Neutral
   m_EditorClassIdentifier: 
   patienceMultiplier: 1.1
-  precisionBias: 0.9
+  precisionBias: 1
   speedBias: 0.9
   wasteSensitivity: 0.5
   tipMultiplier: 0.8
