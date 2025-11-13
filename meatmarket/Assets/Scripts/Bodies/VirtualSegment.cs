@@ -11,6 +11,7 @@ public class VirtualSegment
     public BodySegmentType segmentType;
     public SpeciesType species;
     public bool isRoot;  // True for Upper_Torso
+    public bool hasBeenDeposited;  // Prevent double-depositing
 
     // The cut zone that separates this segment from its parent
     public CutZone parentCut;
@@ -38,7 +39,15 @@ public class VirtualSegment
     /// </summary>
     public bool IsFullyIsolated()
     {
-        if (isRoot) return false;  // Root never deposits
+        // Already deposited? Don't deposit again
+        if (hasBeenDeposited) return false;
+        
+        // Root segment (Upper_Torso) can be isolated when all child cuts are made
+        // Non-root segments need both parent AND child cuts made
+        if (isRoot)
+        {
+            return AreAllChildCutsMade;
+        }
         return IsParentCutMade && AreAllChildCutsMade;
     }
 

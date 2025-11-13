@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Impatient
   m_EditorClassIdentifier: 
   patienceMultiplier: 0.8
-  precisionBias: 0.8
+  precisionBias: 1
   speedBias: 1.5
   wasteSensitivity: 0.5
   tipMultiplier: 1.2

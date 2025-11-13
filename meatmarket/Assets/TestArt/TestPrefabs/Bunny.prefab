@@ -3872,7 +3872,7 @@ PrefabInstance:
     - target: {fileID: -7635826562936255635, guid: 67acd8384372b4ef8a6d14d33ec94344, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: e274e41993856486e94cca0413417aa8, type: 2}
+      objectReference: {fileID: 2100000, guid: 11dbfe39d8b7e4c55b367130cc814ef8, type: 2}
     - target: {fileID: 919132149155446097, guid: 67acd8384372b4ef8a6d14d33ec94344, type: 3}
       propertyPath: m_Name
       value: plushTest

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>
 /// ScriptableObject that manages all orders for the current day.
@@ -29,6 +30,16 @@ public class OrderManagerSO : ScriptableObject
     
     [Tooltip("Orders that have been completed")]
     [SerializeField] private List<CustomerOrder> completedOrders = new List<CustomerOrder>();
+
+    [System.Serializable] public class OrderCompletedEvent : UnityEvent<CustomerOrder> { }
+    [System.Serializable] public class OrderExpiredEvent : UnityEvent<CustomerOrder> { }
+
+    [Header("Events")]
+    [Tooltip("Invoked when an order is completed (all items fulfilled)")]
+    public OrderCompletedEvent OnOrderCompleted;
+    
+    [Tooltip("Invoked when an order expires (timer runs out)")]
+    public OrderExpiredEvent OnOrderExpired;
 
     [Header("Debug")]
     public bool logActions = false;
@@ -218,7 +229,40 @@ public class OrderManagerSO : ScriptableObject
 
         SyncInspectorFields();
 
+        // Trigger completion event for UI/VFX
+        OnOrderCompleted?.Invoke(order);
+
         if (logActions) Debug.Log($"[OrderManagerSO] Completed order \"{order.customerName}\" (cleared slot {slotIndex})");
+    }
+
+    /// <summary>
+    /// Mark an order as expired and clear its slot (no reward)
+    /// Called automatically when timer runs out
+    /// </summary>
+    public void ExpireOrder(CustomerOrder order)
+    {
+        if (order == null) return;
+
+        if (!orderToSlotMap.ContainsKey(order))
+        {
+            if (logActions) Debug.LogWarning($"[OrderManagerSO] Cannot expire order \"{order.customerName}\": not pinned");
+            return;
+        }
+
+        int slotIndex = orderToSlotMap[order];
+
+        // Remove from pinned slot
+        pinnedOrdersSlots[slotIndex] = null;
+        orderToSlotMap.Remove(order);
+
+        // Don't add to completed orders (expired orders don't count as completed)
+
+        SyncInspectorFields();
+
+        // Trigger expiration event for VFX/SFX
+        OnOrderExpired?.Invoke(order);
+
+        if (logActions) Debug.Log($"[OrderManagerSO] Expired order \"{order.customerName}\" (cleared slot {slotIndex}, no reward)");
     }
 
     /// <summary>
@@ -297,15 +341,30 @@ public class OrderManagerSO : ScriptableObject
     
     /// <summary>
     /// Update timers for all pinned orders (call from singleton every frame)
+    /// Also checks for expired orders and clears them automatically
     /// </summary>
     public void UpdateTimers()
     {
+        List<CustomerOrder> expiredOrders = new List<CustomerOrder>();
+        
         for (int i = 0; i < 3; i++)
         {
             if (pinnedOrdersSlots[i] != null)
             {
                 pinnedOrdersSlots[i].TickTimer(Time.deltaTime);
+                
+                // Check if order expired
+                if (pinnedOrdersSlots[i].IsExpired())
+                {
+                    expiredOrders.Add(pinnedOrdersSlots[i]);
+                }
             }
+        }
+        
+        // Expire all expired orders (do this after iteration to avoid modifying collection)
+        foreach (var expiredOrder in expiredOrders)
+        {
+            ExpireOrder(expiredOrder);
         }
     }
 }

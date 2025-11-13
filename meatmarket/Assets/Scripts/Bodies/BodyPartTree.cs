@@ -22,6 +22,8 @@ public class BodyPartTree : MonoBehaviour
     // Internal virtual hierarchy
     private Dictionary<BodySegmentType, VirtualSegment> segments = new Dictionary<BodySegmentType, VirtualSegment>();
     private List<CutZone> allCutZones = new List<CutZone>();
+    // Track all cut precisions per segment to determine limb quality (any perfect => perfect)
+    private Dictionary<BodySegmentType, List<CutPrecision>> segmentCutHistory = new Dictionary<BodySegmentType, List<CutPrecision>>();
 
     void Awake()
     {
@@ -212,17 +214,25 @@ public class BodyPartTree : MonoBehaviour
     /// </summary>
     public void HandleCut(CutContext ctx)
     {
-        // Find the matching CutZone
-        CutZone matchingZone = allCutZones.FirstOrDefault(z => z.limb == ctx.limb && z.section == ctx.section && z.precision == ctx.precision);
+        // Find ALL matching CutZones (match on limb and section only, not precision)
+        // Multiple CutZone variants may exist (Perfect, MissNorth, MissSouth) for the same joint
+        // When any variant is hit, mark ALL variants as cut (the joint is cut regardless of precision)
+        var matchingZones = allCutZones.Where(z => z.limb == ctx.limb && z.section == ctx.section).ToList();
 
-        if (matchingZone == null)
+        if (matchingZones.Count == 0)
         {
-            Debug.LogWarning($"[BodyPartTree] No matching CutZone for {ctx.limb}/{ctx.section}/{ctx.precision}");
+            Debug.LogWarning($"[BodyPartTree] No matching CutZone for {ctx.limb}/{ctx.section} (precision: {ctx.precision})");
             return;
         }
 
-        // Mark zone as cut
-        matchingZone.MarkAsCut();
+        // Mark all variants of this joint as cut
+        foreach (var zone in matchingZones)
+        {
+            zone.MarkAsCut();
+        }
+
+        // Use the first matching zone for cut data updates (they're all for the same joint)
+        CutZone matchingZone = matchingZones[0];
 
         // Find which segment(s) this cut affects and update their cached cut data
         UpdateSegmentCutData(matchingZone, ctx);
@@ -236,14 +246,35 @@ public class BodyPartTree : MonoBehaviour
     /// </summary>
     void UpdateSegmentCutData(CutZone zone, CutContext ctx)
     {
-        // Find segment(s) where this zone is the parent cut
+        // Find segment(s) where this zone is the parent cut OR a child cut
         foreach (var seg in segments.Values)
         {
-            if (seg.parentCut == zone)
+            bool isParentCut = seg.parentCut == zone;
+            bool isChildCut = seg.childCuts.Contains(zone);
+            
+            if (isParentCut)
             {
                 seg.lastPrecision = ctx.precision;
                 seg.lastToolUsed = ctx.toolType;
                 seg.lastCutSection = ctx.section;
+            }
+            else if (isChildCut && seg.isRoot)
+            {
+                // For root segment, update cut data from child cuts (no parent cut exists)
+                seg.lastPrecision = ctx.precision;
+                seg.lastToolUsed = ctx.toolType;
+                seg.lastCutSection = ctx.section;
+            }
+            
+            // Record precision for both parent and child cuts (needed for root segment quality)
+            if (isParentCut || isChildCut)
+            {
+                if (!segmentCutHistory.TryGetValue(seg.segmentType, out var list))
+                {
+                    list = new List<CutPrecision>(4);
+                    segmentCutHistory[seg.segmentType] = list;
+                }
+                list.Add(ctx.precision);
             }
         }
     }
@@ -259,6 +290,7 @@ public class BodyPartTree : MonoBehaviour
             {
                 OnSegmentFullyIsolated(seg);
             }
+            // Removed verbose debug logs - only log when segments are actually isolated
         }
     }
 
@@ -275,6 +307,16 @@ public class BodyPartTree : MonoBehaviour
         // Generate severed part data
         SeveredPartData partData = segment.GeneratePartData();
 
+        // If any recorded cut for this segment was Perfect, upgrade quality/precision to Perfect
+        if (segmentCutHistory.TryGetValue(segment.segmentType, out var cuts) && cuts.Any())
+        {
+            if (cuts.Contains(CutPrecision.Perfect))
+            {
+                partData.quality = QualityTier.Perfect;
+                partData.precision = CutPrecision.Perfect;
+            }
+        }
+
         // Send to deposit tray
         if (depositTray != null)
         {
@@ -286,9 +328,14 @@ public class BodyPartTree : MonoBehaviour
         }
 
         // Mark segment as already deposited (prevent double-deposit)
-        // We do this by making it non-root (so IsFullyIsolated returns false next check)
-        // A cleaner approach would be to add a "hasBeenDeposited" flag
-        segment.isRoot = true;  // Hack: make it think it's root so it won't isolate again
+        segment.hasBeenDeposited = true;
+
+        // Optionally clear stored history for this segment to free memory
+        if (segmentCutHistory.ContainsKey(segment.segmentType))
+        {
+            segmentCutHistory.Remove(segment.segmentType);
+        }
     }
 }
+
 

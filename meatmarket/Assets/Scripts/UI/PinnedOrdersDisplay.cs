@@ -76,6 +76,46 @@ public class PinnedOrdersDisplay : MonoBehaviour
         }
     }
 
+    void OnEnable()
+    {
+        // Subscribe to order completion/expiration events for immediate refresh
+        if (orderManager != null)
+        {
+            orderManager.OnOrderCompleted.AddListener(OnOrderCompleted);
+            orderManager.OnOrderExpired.AddListener(OnOrderExpired);
+        }
+        RefreshDisplay();
+    }
+
+    void OnDisable()
+    {
+        // Unsubscribe from events
+        if (orderManager != null)
+        {
+            orderManager.OnOrderCompleted.RemoveListener(OnOrderCompleted);
+            orderManager.OnOrderExpired.RemoveListener(OnOrderExpired);
+        }
+    }
+
+    /// <summary>
+    /// Called when an order is completed - refresh immediately
+    /// </summary>
+    void OnOrderCompleted(CustomerOrder order)
+    {
+        if (logUpdates) Debug.Log($"[PinnedOrdersDisplay] Order completed, refreshing display");
+        RefreshDisplay();
+    }
+
+    /// <summary>
+    /// Called when an order expires - refresh immediately
+    /// </summary>
+    void OnOrderExpired(CustomerOrder order)
+    {
+        if (logUpdates) Debug.Log($"[PinnedOrdersDisplay] Order expired, refreshing display");
+        RefreshDisplay();
+    }
+
+
     /// <summary>
     /// Refresh all order slots
     /// </summary>
@@ -86,12 +126,11 @@ public class PinnedOrdersDisplay : MonoBehaviour
             Debug.LogWarning("[PinnedOrdersDisplay] OrderManager not assigned");
             return;
         }
-
         // Get pinned orders directly from slots
         var slot0Order = orderManager.pinnedSlot0;
         var slot1Order = orderManager.pinnedSlot1;
         var slot2Order = orderManager.pinnedSlot2;
-
+ 
         // Update slot 0
         UpdateSlot(0, slot0Order, slot1Root, slot1CustomerName, slot1Timer, slot1Items);
         
@@ -156,8 +195,8 @@ public class PinnedOrdersDisplay : MonoBehaviour
                     Color speciesColor = GetSpeciesColor(item.species);
                     string colorHex = ColorUtility.ToHtmlStringRGB(speciesColor);
                     
-                    // Format: "○ 0/1× Hand" with Hand colored by species (red/green/blue)
-                    string itemText = $"{checkmark} {progress}× <color=#{colorHex}>{partTypeDisplay}</color>";
+                    // Format: "○ 0/1 Hand" with Hand colored by species (red/green/blue)
+                    string itemText = $"{checkmark} {progress} <color=#{colorHex}>{partTypeDisplay}</color>";
                     
                     sb.AppendLine(itemText);
                 }
@@ -202,11 +241,6 @@ public class PinnedOrdersDisplay : MonoBehaviour
         RefreshDisplay();
     }
 
-    void OnEnable()
-    {
-        RefreshDisplay();
-    }
-    
     /// <summary>
     /// Get color for a species
     /// </summary>
