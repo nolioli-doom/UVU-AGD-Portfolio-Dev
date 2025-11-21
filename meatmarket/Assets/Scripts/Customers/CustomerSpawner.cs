@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -13,8 +14,8 @@ public class CustomerSpawner : MonoBehaviour
     [Tooltip("Total time window for all customers to spawn (seconds)")]
     public float spawnWindowSeconds = 180f; // 3 minutes
     
-    [Tooltip("Day index for difficulty settings (0 = first day)")]
-    public int dayIndex = 0;
+    [Tooltip("DayIndexSO that stores the current day index (persists across scene loads)")]
+    public DayIndexSO dayIndexSO;
     
     [Tooltip("Minimum time between spawns (seconds)")]
     public float minSpawnInterval = 5f;
@@ -101,7 +102,19 @@ public class CustomerSpawner : MonoBehaviour
             return;
         }
         
+        // Auto-find DayIndexSO if not assigned
+        if (dayIndexSO == null)
+        {
+            dayIndexSO = Resources.FindObjectsOfTypeAll<DayIndexSO>().FirstOrDefault();
+            if (dayIndexSO == null)
+            {
+                Debug.LogError("[CustomerSpawner] DayIndexSO not found! Please create one and assign it.");
+                return;
+            }
+        }
+        
         // Generate the full round using OrderGenerator with proper day index
+        int dayIndex = dayIndexSO.currentDayIndex;
         orderGenerator.GenerateRound(dayIndex);
         var round = orderGenerator.CurrentRound;
         preGeneratedOrders = new List<CustomerOrder>(round.orders);
@@ -387,6 +400,7 @@ public class CustomerSpawner : MonoBehaviour
             Debug.Log($"  - Time Limit: {order.timeLimitSeconds}s");
             Debug.Log($"  - Archetype: {order.archetype?.displayName ?? "None"} (Patience: {order.archetype?.patienceMultiplier ?? 1f}, Speed: {order.archetype?.speedBias ?? 1f})");
             Debug.Log($"  - Order ID: {order.GetHashCode()}");
+            int dayIndex = dayIndexSO != null ? dayIndexSO.currentDayIndex : 0;
             Debug.Log($"  - Day {dayIndex} ({orderGenerator.GetDifficultyName(dayIndex)})");
         }
         

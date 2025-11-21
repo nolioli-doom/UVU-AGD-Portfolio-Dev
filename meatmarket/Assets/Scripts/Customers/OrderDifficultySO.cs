@@ -21,4 +21,8 @@ public class OrderDifficultySO : ScriptableObject
     [Header("Rarity & Caps")]
     [Range(0f, 1f)] public float rareSpeciesFavor = 0.25f; // how often to pull rarer species
     public int softSpeciesCapBuffer = 2;                    // allow exceeding cap by small buffer (then adjust)
+    
+    [Header("Day Timer")]
+    [Tooltip("Total time limit for the day in seconds. Day ends when this timer hits zero.")]
+    public float dayTimerDuration = 300f; // 5 minutes default
 }

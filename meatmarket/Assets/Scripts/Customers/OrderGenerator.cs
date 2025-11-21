@@ -139,6 +139,19 @@ public class OrderGenerator : MonoBehaviour
     /// <summary>
     /// Get the difficulty name for a given day index
     /// </summary>
+    /// <summary>
+    /// Get the difficulty SO for a given day index
+    /// </summary>
+    public OrderDifficultySO GetDifficultyForDay(int dayIndex)
+    {
+        if (difficultyByDay == null || difficultyByDay.Count == 0)
+        {
+            Debug.LogError("[OrderGenerator] No difficulties configured!");
+            return null;
+        }
+        return difficultyByDay[Mathf.Clamp(dayIndex, 0, difficultyByDay.Count - 1)];
+    }
+    
     public string GetDifficultyName(int dayIndex)
     {
         if (difficultyByDay == null || difficultyByDay.Count == 0)
