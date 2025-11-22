@@ -43,6 +43,9 @@ public class CustomerVisual : MonoBehaviour
     [Tooltip("Whether this customer's order is pinned")]
     public bool isPinned = false;
     
+    [Tooltip("Whether this customer's order is completed")]
+    public bool isCompleted = false;
+    
     private CustomerOrder customerOrder;
     private CustomerArchetypeSO archetype;
     private Vector3 spawnPosition;
@@ -180,6 +183,10 @@ public class CustomerVisual : MonoBehaviour
     public void SetPinned(bool pinned)
     {
         isPinned = pinned;
+        if (pinned)
+        {
+            isCompleted = false; // Can't be both pinned and completed
+        }
         if (logMovement) Debug.Log($"[CustomerVisual] Customer pinned state: {pinned}");
     }
     
@@ -189,6 +196,30 @@ public class CustomerVisual : MonoBehaviour
     public bool IsPinned()
     {
         return isPinned;
+    }
+    
+    /// <summary>
+    /// Set whether this customer's order is completed
+    /// </summary>
+    public void SetCompleted(bool completed)
+    {
+        isCompleted = completed;
+        if (completed)
+        {
+            isPinned = false; // Can't be both pinned and completed
+            enableWandering = false; // Stop wandering when completed
+            isMoving = false;
+            isWaiting = false;
+        }
+        if (logMovement) Debug.Log($"[CustomerVisual] Customer completed state: {completed}");
+    }
+    
+    /// <summary>
+    /// Check if this customer's order is completed
+    /// </summary>
+    public bool IsCompleted()
+    {
+        return isCompleted;
     }
     
     /// <summary>

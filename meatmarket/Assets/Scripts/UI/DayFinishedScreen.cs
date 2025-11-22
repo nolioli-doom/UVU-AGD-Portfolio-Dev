@@ -85,6 +85,39 @@ public class DayFinishedScreen : MonoBehaviour
         gameObject.SetActive(false);
     }
     
+    void OnEnable()
+    {
+        // When screen becomes active, try to get the score from DayFinishedManager's static property first
+        // (this is set when the day ends, before the screen is enabled)
+        int finalScore = DayFinishedManager.FinalDayScore;
+        
+        // If we don't have a score from DayFinishedManager, try reading from ScoreManagerController as fallback
+        if (finalScore == 0)
+        {
+            if (scoreManager == null)
+            {
+                scoreManager = FindObjectOfType<ScoreManagerController>();
+            }
+            
+            if (scoreManager != null)
+            {
+                finalScore = scoreManager.GetCurrentScore();
+            }
+        }
+        
+        // Only update if we don't already have a score set, or if we got a non-zero score
+        // (this handles the case where screen is enabled at scene start vs when day ends)
+        if (currentDayScore == 0 || finalScore > 0)
+        {
+            SetDayScore(finalScore);
+        }
+        
+        if (logActions)
+        {
+            Debug.Log($"[DayFinishedScreen] Screen enabled - FinalDayScore: {DayFinishedManager.FinalDayScore}, Score from manager: {(scoreManager != null ? scoreManager.GetCurrentScore().ToString() : "N/A")}, Displaying: {currentDayScore}");
+        }
+    }
+    
     /// <summary>
     /// Set the score to display for this day
     /// </summary>

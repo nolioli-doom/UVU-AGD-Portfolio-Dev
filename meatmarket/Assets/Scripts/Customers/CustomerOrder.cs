@@ -48,6 +48,12 @@ public class CustomerOrder
     /// </summary>
     public bool IsExpired()
     {
+        // Initialize timer if not already initialized
+        if (!timerInitialized)
+        {
+            remainingTime = timeLimitSeconds;
+            timerInitialized = true;
+        }
         return remainingTime <= 0f;
     }
 }

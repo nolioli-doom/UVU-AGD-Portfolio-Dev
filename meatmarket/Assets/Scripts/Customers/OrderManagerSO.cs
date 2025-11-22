@@ -30,6 +30,9 @@ public class OrderManagerSO : ScriptableObject
     
     [Tooltip("Orders that have been completed")]
     [SerializeField] private List<CustomerOrder> completedOrders = new List<CustomerOrder>();
+    
+    [Tooltip("Orders that have expired (no reward)")]
+    [SerializeField] private List<CustomerOrder> expiredOrders = new List<CustomerOrder>();
 
     [System.Serializable] public class OrderCompletedEvent : UnityEvent<CustomerOrder> { }
     [System.Serializable] public class OrderExpiredEvent : UnityEvent<CustomerOrder> { }
@@ -68,6 +71,7 @@ public class OrderManagerSO : ScriptableObject
         pinnedOrdersSlots[1] = null;
         pinnedOrdersSlots[2] = null;
         completedOrders.Clear();
+        expiredOrders.Clear();
         orderToSlotMap.Clear();
         
         if (logActions) Debug.Log("[OrderManagerSO] Auto-cleared on enable - fresh start guaranteed");
@@ -87,6 +91,7 @@ public class OrderManagerSO : ScriptableObject
             pinnedOrdersSlots[i] = null;
         }
         completedOrders.Clear();
+        expiredOrders.Clear();
         orderToSlotMap.Clear();
         
         // Reset all order progress
@@ -127,12 +132,26 @@ public class OrderManagerSO : ScriptableObject
             return -1;
         }
 
+        // Check if order is expired - cannot pin expired orders
+        if (order.IsExpired() || expiredOrders.Contains(order))
+        {
+            if (logActions) Debug.LogWarning($"[OrderManagerSO] Cannot pin expired order \"{order.customerName}\"");
+            return -1;
+        }
+
         // Check if already pinned
         if (orderToSlotMap.ContainsKey(order))
         {
             int slotIndex = orderToSlotMap[order];
             if (logActions) Debug.Log($"[OrderManagerSO] Order \"{order.customerName}\" already pinned in slot {slotIndex}");
             return slotIndex;
+        }
+
+        // Check if order is already completed - cannot pin completed orders
+        if (completedOrders.Contains(order))
+        {
+            if (logActions) Debug.LogWarning($"[OrderManagerSO] Cannot pin completed order \"{order.customerName}\"");
+            return -1;
         }
 
         // Find first available slot
@@ -156,12 +175,12 @@ public class OrderManagerSO : ScriptableObject
         pinnedOrdersSlots[availableSlot] = order;
         orderToSlotMap[order] = availableSlot;
 
-        // Remove from waiting orders
-        waitingOrders.Remove(order);
+        // Remove from waiting orders - need to find by matching properties since orders may be copies
+        bool wasRemoved = RemoveOrderFromWaiting(order);
 
         SyncInspectorFields();
-
-        if (logActions) Debug.Log($"[OrderManagerSO] Pinned order \"{order.customerName}\" to slot {availableSlot}");
+        
+        if (logActions) Debug.Log($"[OrderManagerSO] Pinned order \"{order.customerName}\" to slot {availableSlot}. Removed from waitingOrders: {wasRemoved}, Remaining waitingOrders: {waitingOrders.Count}");
         
         return availableSlot;
     }
@@ -224,8 +243,25 @@ public class OrderManagerSO : ScriptableObject
         pinnedOrdersSlots[slotIndex] = null;
         orderToSlotMap.Remove(order);
 
+        // Remove from waiting orders if present (handles order copies)
+        bool wasRemoved = RemoveOrderFromWaiting(order);
+        if (logActions)
+        {
+            if (wasRemoved)
+            {
+                Debug.Log($"[OrderManagerSO] Removed order \"{order.customerName}\" from waitingOrders. Remaining: {waitingOrders.Count}");
+            }
+            else
+            {
+                Debug.Log($"[OrderManagerSO] Order \"{order.customerName}\" not in waitingOrders (already removed when pinned). Current waitingOrders.Count: {waitingOrders.Count}");
+            }
+        }
+
         // Add to completed orders
-        completedOrders.Add(order);
+        if (!completedOrders.Contains(order))
+        {
+            completedOrders.Add(order);
+        }
 
         SyncInspectorFields();
 
@@ -254,6 +290,26 @@ public class OrderManagerSO : ScriptableObject
         // Remove from pinned slot
         pinnedOrdersSlots[slotIndex] = null;
         orderToSlotMap.Remove(order);
+
+        // Remove from waiting orders if present (handles order copies)
+        bool wasRemoved = RemoveOrderFromWaiting(order);
+        if (logActions)
+        {
+            if (wasRemoved)
+            {
+                Debug.Log($"[OrderManagerSO] Removed expired order \"{order.customerName}\" from waitingOrders. Remaining: {waitingOrders.Count}");
+            }
+            else
+            {
+                Debug.Log($"[OrderManagerSO] Expired order \"{order.customerName}\" not in waitingOrders (already removed when pinned). Current waitingOrders.Count: {waitingOrders.Count}");
+            }
+        }
+
+        // Add to expired orders list so it cannot be pinned again
+        if (!expiredOrders.Contains(order))
+        {
+            expiredOrders.Add(order);
+        }
 
         // Don't add to completed orders (expired orders don't count as completed)
 
@@ -285,9 +341,21 @@ public class OrderManagerSO : ScriptableObject
             pinnedOrdersSlots[i] = null;
         }
         completedOrders.Clear();
+        expiredOrders.Clear();
         orderToSlotMap.Clear();
         SyncInspectorFields();
         if (logActions) Debug.Log("[OrderManagerSO] Cleared all orders");
+    }
+    
+    /// <summary>
+    /// Clear only waiting orders (keep pinned and completed)
+    /// Used when day ends with unpinned orders remaining
+    /// </summary>
+    public void ClearWaitingOrders()
+    {
+        waitingOrders.Clear();
+        SyncInspectorFields();
+        if (logActions) Debug.Log("[OrderManagerSO] Cleared waiting orders");
     }
 
     /// <summary>
@@ -302,6 +370,7 @@ public class OrderManagerSO : ScriptableObject
             pinnedOrdersSlots[i] = null;
         }
         completedOrders.Clear();
+        expiredOrders.Clear();
         orderToSlotMap.Clear();
         SyncInspectorFields();
         Debug.Log("[OrderManagerSO] FORCE CLEARED all data");
@@ -332,11 +401,69 @@ public class OrderManagerSO : ScriptableObject
     }
 
     /// <summary>
+    /// Remove an order from waitingOrders by matching its properties (handles order copies)
+    /// </summary>
+    private bool RemoveOrderFromWaiting(CustomerOrder order)
+    {
+        if (order == null) return false;
+
+        // First try direct reference match (fast path)
+        if (waitingOrders.Remove(order))
+        {
+            return true;
+        }
+
+        // If that fails, find by matching properties (customerName and items)
+        for (int i = waitingOrders.Count - 1; i >= 0; i--)
+        {
+            CustomerOrder waitingOrder = waitingOrders[i];
+            if (waitingOrder == null) continue;
+
+            // Match by customerName and items count/content
+            if (waitingOrder.customerName == order.customerName &&
+                waitingOrder.items != null && order.items != null &&
+                waitingOrder.items.Count == order.items.Count)
+            {
+                // Check if items match (same count, types, species, and quantity)
+                bool itemsMatch = true;
+                for (int j = 0; j < waitingOrder.items.Count; j++)
+                {
+                    if (waitingOrder.items[j].partType != order.items[j].partType ||
+                        waitingOrder.items[j].species != order.items[j].species ||
+                        waitingOrder.items[j].quantity != order.items[j].quantity)
+                    {
+                        itemsMatch = false;
+                        break;
+                    }
+                }
+
+                if (itemsMatch)
+                {
+                    waitingOrders.RemoveAt(i);
+                    if (logActions) Debug.Log($"[OrderManagerSO] Removed matching order \"{order.customerName}\" from waitingOrders by content match");
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Get all completed orders
     /// </summary>
     public List<CustomerOrder> GetCompletedOrders()
     {
         return new List<CustomerOrder>(completedOrders);
+    }
+
+    /// <summary>
+    /// Check if an order is expired
+    /// </summary>
+    public bool IsOrderExpired(CustomerOrder order)
+    {
+        if (order == null) return false;
+        return order.IsExpired() || expiredOrders.Contains(order);
     }
     
     /// <summary>

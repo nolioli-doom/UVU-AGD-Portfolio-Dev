@@ -82,13 +82,99 @@ public class CustomerSpawner : MonoBehaviour
             orderGenerator = FindObjectOfType<OrderGenerator>();
         
         if (orderManager == null)
-            orderManager = FindObjectOfType<OrderManagerSO>();
+            orderManager = Resources.FindObjectsOfTypeAll<OrderManagerSO>().FirstOrDefault();
         
         // Generate the full round at start
         GenerateFullRound();
         
+        // Subscribe to order completion and expiration events to update customer states
+        if (orderManager != null)
+        {
+            orderManager.OnOrderCompleted.AddListener(OnOrderCompleted);
+            orderManager.OnOrderExpired.AddListener(OnOrderExpired);
+        }
+        
         // Auto-start spawning after a brief delay
         StartCoroutine(AutoStartSpawning());
+    }
+    
+    void OnDestroy()
+    {
+        // Unsubscribe from events
+        if (orderManager != null)
+        {
+            orderManager.OnOrderCompleted.RemoveListener(OnOrderCompleted);
+            orderManager.OnOrderExpired.RemoveListener(OnOrderExpired);
+        }
+    }
+    
+    /// <summary>
+    /// Called when an order is completed - updates customer state
+    /// </summary>
+    private void OnOrderCompleted(CustomerOrder completedOrder)
+    {
+        if (completedOrder == null) return;
+        
+        // Find the customer GameObject that has this order
+        FindAndUpdateCustomerState(completedOrder, true);
+    }
+    
+    /// <summary>
+    /// Called when an order expires - updates customer state
+    /// </summary>
+    private void OnOrderExpired(CustomerOrder expiredOrder)
+    {
+        if (expiredOrder == null) return;
+        
+        // Find the customer GameObject that has this order and set them back to roaming
+        FindAndUpdateCustomerState(expiredOrder, false);
+    }
+    
+    /// <summary>
+    /// Find customer with given order and update their state
+    /// </summary>
+    private void FindAndUpdateCustomerState(CustomerOrder order, bool isCompleted)
+    {
+        if (order == null) return;
+        
+        // Find the customer GameObject that has this order
+        foreach (GameObject customerObj in spawnedCustomers)
+        {
+            if (customerObj == null) continue;
+            
+            CustomerVisual customerVisual = customerObj.GetComponent<CustomerVisual>();
+            if (customerVisual == null) continue;
+            
+            CustomerOrder customerOrder = customerVisual.GetOrder();
+            if (customerOrder == null) continue;
+            
+            // Check if this customer has the order (compare by reference or ID)
+            if (customerOrder == order || customerOrder.GetHashCode() == order.GetHashCode())
+            {
+                if (isCompleted)
+                {
+                    // Update customer to completed state
+                    customerVisual.SetCompleted(true);
+                    
+                    if (logSpawns)
+                    {
+                        Debug.Log($"[CustomerSpawner] Customer {customerObj.name} order completed - set to completed state");
+                    }
+                }
+                else
+                {
+                    // Order expired - set customer back to roaming (not pinned anymore)
+                    customerVisual.SetPinned(false);
+                    customerVisual.ReturnToWaitingArea();
+                    
+                    if (logSpawns)
+                    {
+                        Debug.Log($"[CustomerSpawner] Customer {customerObj.name} order expired - returned to waiting area");
+                    }
+                }
+                break; // Found the customer, no need to continue
+            }
+        }
     }
     
     /// <summary>
@@ -258,6 +344,14 @@ public class CustomerSpawner : MonoBehaviour
             
             yield return new WaitForSeconds(nextSpawnDelay);
             
+            // Check if day has ended - stop spawning if so
+            DayFinishedManager dayFinishedManager = FindObjectOfType<DayFinishedManager>();
+            if (dayFinishedManager != null && dayFinishedManager.IsDayEnded())
+            {
+                if (logSpawns) Debug.Log("[CustomerSpawner] Day ended - stopping customer spawning");
+                yield break; // Exit coroutine
+            }
+            
             // Spawn customer
             SpawnCustomer();
             customersSpawned++;
@@ -265,6 +359,14 @@ public class CustomerSpawner : MonoBehaviour
         }
         
         // Spawn any remaining customers if we're at the end of the window
+        // But check if day has ended first
+        DayFinishedManager checkManager = FindObjectOfType<DayFinishedManager>();
+        if (checkManager != null && checkManager.IsDayEnded())
+        {
+            if (logSpawns) Debug.Log("[CustomerSpawner] Day ended - stopping remaining customer spawns");
+            yield break;
+        }
+        
         while (customersSpawned < totalCustomersToSpawn)
         {
             SpawnCustomer();
@@ -507,22 +609,44 @@ public class CustomerSpawner : MonoBehaviour
                 return;
             }
             
-            // Add only waiting customers to queue
+            // Add only waiting customers to queue (not pinned, not completed)
             int addedCount = 0;
             foreach (var customerGO in customerGameObjects)
             {
                 // Get the CustomerVisual component from the GameObject
                 CustomerVisual customerVisual = customerGO.GetComponent<CustomerVisual>();
-                if (customerVisual != null && !customerVisual.IsPinned())
+                if (customerVisual == null)
                 {
-                    if (queueManager.AddCustomerToQueue(customerVisual))
-                    {
-                        addedCount++;
-                    }
+                    Debug.LogWarning($"[CustomerSpawner] Customer GameObject {customerGO.name} does not have CustomerVisual component");
+                    continue;
                 }
-                else if (customerVisual != null && customerVisual.IsPinned())
+
+                // Skip if already pinned
+                if (customerVisual.IsPinned())
                 {
                     if (logSpawns) Debug.Log($"[CustomerSpawner] Skipping pinned customer: {customerVisual.name}");
+                    continue;
+                }
+
+                // Skip if already completed
+                if (customerVisual.IsCompleted())
+                {
+                    if (logSpawns) Debug.Log($"[CustomerSpawner] Skipping completed customer: {customerVisual.name}");
+                    continue;
+                }
+
+                // Skip if order is expired
+                CustomerOrder customerOrder = customerVisual.GetOrder();
+                if (customerOrder != null && orderManager != null && orderManager.IsOrderExpired(customerOrder))
+                {
+                    if (logSpawns) Debug.Log($"[CustomerSpawner] Skipping customer with expired order: {customerVisual.name}");
+                    continue;
+                }
+
+                // Add to queue
+                if (queueManager.AddCustomerToQueue(customerVisual))
+                {
+                    addedCount++;
                 }
                 else
                 {

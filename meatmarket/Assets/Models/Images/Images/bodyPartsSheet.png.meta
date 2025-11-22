@@ -1,0 +1,738 @@
+fileFormatVersion: 2
+guid: 1da151265c48c45578bc8892d2f2bb21
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: rabbitHandSprite
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 925
+        width: 139
+        height: 198
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 06b3150457eae466e924fcf66d8b35a5
+      internalID: 2128514837
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rabbitFootSprite
+      rect:
+        serializedVersion: 2
+        x: 182
+        y: 974
+        width: 103
+        height: 148
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 38ee857dda37042a0a6101b8b60c8c74
+      internalID: 1283889489
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dogFootSprite
+      rect:
+        serializedVersion: 2
+        x: 317
+        y: 953
+        width: 109
+        height: 169
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0041971b1c6db4e16bc12d816808b7e4
+      internalID: -341591367
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dogUpperTorsoSprite
+      rect:
+        serializedVersion: 2
+        x: 457
+        y: 911
+        width: 207
+        height: 206
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 011851006c0954d57a2b5e92661b78ec
+      internalID: -92063101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: catUpperTorsoSprite
+      rect:
+        serializedVersion: 2
+        x: 693
+        y: 885
+        width: 165
+        height: 234
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1b757f2fc3a9149ebadd2727c2974086
+      internalID: 2047475970
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rabbitUpperTorsoSprite
+      rect:
+        serializedVersion: 2
+        x: 901
+        y: 875
+        width: 177
+        height: 244
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5d0121ea1d81b4161949a0a48e47831e
+      internalID: -1174959435
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rabbitUpperArmSprite
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 731
+        width: 123
+        height: 189
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b01f5b72e56fd404d99404e80b12244f
+      internalID: 1513835952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rabbitLowerArmSprite
+      rect:
+        serializedVersion: 2
+        x: 164
+        y: 734
+        width: 92
+        height: 159
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a41bab4ec6b2d4c2aaf33351475fe5b6
+      internalID: -101772488
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dogLowerArmSprite
+      rect:
+        serializedVersion: 2
+        x: 307
+        y: 720
+        width: 93
+        height: 155
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 814a095c84faf4fbc92bfcdac022ad3c
+      internalID: -2136175824
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dogLowerTorsoSprite
+      rect:
+        serializedVersion: 2
+        x: 460
+        y: 701
+        width: 184
+        height: 187
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 967b79dc217d545f7ad3d46883298305
+      internalID: -757715404
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: catLowerTorsoSprite
+      rect:
+        serializedVersion: 2
+        x: 694
+        y: 699
+        width: 189
+        height: 153
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 65fd6d846d8614f3d9fe619755303667
+      internalID: 1876557092
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rabbitLowerTorsoSprite
+      rect:
+        serializedVersion: 2
+        x: 913
+        y: 669
+        width: 206
+        height: 188
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e57076151fd0f4198852a6eaba89e78d
+      internalID: 1605038540
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: catHandSprite
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 552
+        width: 125
+        height: 155
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7ef9fbdeb29a0483e897a322cd970fc4
+      internalID: 1524782874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: catFootSprite
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 555
+        width: 104
+        height: 151
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 584e43af54c3a41b087053c5902c54e7
+      internalID: 922100781
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dogHandSprite
+      rect:
+        serializedVersion: 2
+        x: 307
+        y: 494
+        width: 119
+        height: 195
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 29af1d9e3425348b68bc88a0002f1359
+      internalID: 604051831
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rabbitUpperLegSprite
+      rect:
+        serializedVersion: 2
+        x: 475
+        y: 472
+        width: 150
+        height: 208
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 169d2d0370e5b4802a7cd0f527fb82f2
+      internalID: 1658821810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rabbitLowerLegSprite
+      rect:
+        serializedVersion: 2
+        x: 726
+        y: 444
+        width: 99
+        height: 218
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0df2303954ffe48e48fb3367f81c2dd1
+      internalID: -440364834
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dogLowerLegSprite
+      rect:
+        serializedVersion: 2
+        x: 965
+        y: 452
+        width: 90
+        height: 199
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b246bf1f3746a4e51836e444471548dc
+      internalID: 1261488445
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: catUpperArmSprite
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 265
+        width: 129
+        height: 169
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 790533035a6bb476598df807349534b0
+      internalID: -1547598460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: catLowerArmSprite
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 265
+        width: 108
+        height: 162
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cbf8edbe463594d28aa3cccc3e968132
+      internalID: 1858086659
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dogUpperArmSprite
+      rect:
+        serializedVersion: 2
+        x: 310
+        y: 251
+        width: 118
+        height: 182
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 79493e7a4b44a4e3caa08233fa0a6e56
+      internalID: 776727324
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: catUpperLegSprite
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 1
+        width: 139
+        height: 228
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 680520edcb0f247b692589f1de0aac9a
+      internalID: -235504831
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: catLowerLegSprite
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 31
+        width: 96
+        height: 174
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9d039742e872c415a9b8d80a93f332d0
+      internalID: 84655400
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dogUpperLegSprite
+      rect:
+        serializedVersion: 2
+        x: 306
+        y: 28
+        width: 138
+        height: 190
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 10cdf40bbb8ce4c0894a6aa71fbfccef
+      internalID: 703672607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rabbitHeadSprite
+      rect:
+        serializedVersion: 2
+        x: 474
+        y: 3
+        width: 242
+        height: 412
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3f63dd17c7fb94b77a2a786f09395ad2
+      internalID: -649761416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: catHeadSprite
+      rect:
+        serializedVersion: 2
+        x: 772
+        y: 50
+        width: 218
+        height: 326
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5ac9276580db3488ebd54e971db55f3b
+      internalID: 1931240894
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dogHeadSprite
+      rect:
+        serializedVersion: 2
+        x: 1033
+        y: 83
+        width: 293
+        height: 251
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9c47fea3498074632b1e604478c0e8dc
+      internalID: -692238060
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: e0ce6fd70cfde4e5188355e5130debfd
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      catFootSprite: 922100781
+      catHandSprite: 1524782874
+      catHeadSprite: 1931240894
+      catLowerArmSprite: 1858086659
+      catLowerLegSprite: 84655400
+      catLowerTorsoSprite: 1876557092
+      catUpperArmSprite: -1547598460
+      catUpperLegSprite: -235504831
+      catUpperTorsoSprite: 2047475970
+      dogFootSprite: -341591367
+      dogHandSprite: 604051831
+      dogHeadSprite: -692238060
+      dogLowerArmSprite: -2136175824
+      dogLowerLegSprite: 1261488445
+      dogLowerTorsoSprite: -757715404
+      dogUpperArmSprite: 776727324
+      dogUpperLegSprite: 703672607
+      dogUpperTorsoSprite: -92063101
+      rabbitFootSprite: 1283889489
+      rabbitHandSprite: 2128514837
+      rabbitHeadSprite: -649761416
+      rabbitLowerArmSprite: -101772488
+      rabbitLowerLegSprite: -440364834
+      rabbitLowerTorsoSprite: 1605038540
+      rabbitUpperArmSprite: 1513835952
+      rabbitUpperLegSprite: 1658821810
+      rabbitUpperTorsoSprite: -1174959435
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

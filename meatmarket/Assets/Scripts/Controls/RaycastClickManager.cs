@@ -22,6 +22,12 @@ public class RaycastClickManager : MonoBehaviour
 
     private void Update()
     {
+        // Check if interactions are locked (e.g., during day end screen)
+        if (InteractionLockManager.IsLocked)
+        {
+            return; // Don't process any clicks when locked
+        }
+
         if (Input.GetMouseButtonDown(0)) // left mouse click
         {
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);

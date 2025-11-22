@@ -35,6 +35,12 @@ public class CutZone : MonoBehaviour
     // If you want to drive cuts from a raycast, call this from your tool when it hits the collider
     public void NotifyRaycastHit(RaycastHit hit, GameObject toolGO)
     {
+        // Check if interactions are locked (e.g., during day end screen)
+        if (InteractionLockManager.IsLocked)
+        {
+            return; // Don't process cut zones when locked
+        }
+
         var toolType = ToolManager.Instance != null ? ToolManager.Instance.CurrentTool : default(ToolManager.ToolType);
         var bodyType = GetBodyTypeFromRoot();
         var ctx = new CutContext(root, limb, section, precision, hit.point, hit.normal, toolGO, toolType, bodyType);
@@ -46,6 +52,13 @@ public class CutZone : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         if (!useTriggerCallbacks) return;
+        
+        // Check if interactions are locked (e.g., during day end screen)
+        if (InteractionLockManager.IsLocked)
+        {
+            return; // Don't process trigger cuts when locked
+        }
+
         var p = transform.position; // best-effort hit point if none
         var toolType = ToolManager.Instance != null ? ToolManager.Instance.CurrentTool : default(ToolManager.ToolType);
         var bodyType = GetBodyTypeFromRoot();
