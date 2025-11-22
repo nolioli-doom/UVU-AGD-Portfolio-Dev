@@ -7,9 +7,6 @@ using UnityEngine.Events;
 /// </summary>
 public class ScoreManagerController : MonoBehaviour
 {
-    [Header("Configuration")]
-    public ScoreConfigSO scoreConfig;
-
     [Header("State (Read-Only)")]
     public int currentScore = 0;
 

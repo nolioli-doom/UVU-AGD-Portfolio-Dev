@@ -42,9 +42,18 @@ public class UISwitcher : MonoBehaviour
     
     private bool isInCustomerScene;
     
+    void Awake()
+    {
+        // Initialize state in Awake to ensure it's set before any Start() methods
+        isInCustomerScene = startInCustomerScene;
+    }
+    
     void Start()
     {
-        // Set initial state
+        // Ensure state is correct and update scene
+        if (logSwitches) Debug.Log($"[UISwitcher] Start() - startInCustomerScene={startInCustomerScene}, isInCustomerScene={isInCustomerScene}");
+        
+        // Force correct initial state
         isInCustomerScene = startInCustomerScene;
         UpdateSceneState();
         
@@ -56,7 +65,15 @@ public class UISwitcher : MonoBehaviour
     /// </summary>
     public void SwitchScene()
     {
+        bool previousState = isInCustomerScene;
+        
+        if (logSwitches) Debug.Log($"[UISwitcher] SwitchScene() called - Current state: {(previousState ? "Customer" : "Butchery")}, startInCustomerScene={startInCustomerScene}");
+        
+        // Flip the state
         isInCustomerScene = !isInCustomerScene;
+        
+        if (logSwitches) Debug.Log($"[UISwitcher] SwitchScene() - Previous: {(previousState ? "Customer" : "Butchery")}, New: {(isInCustomerScene ? "Customer" : "Butchery")}");
+        
         UpdateSceneState();
         
         // When switching to butchery, reset all customers to roaming

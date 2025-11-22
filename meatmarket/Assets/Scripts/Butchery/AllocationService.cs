@@ -16,6 +16,9 @@ public class AllocationService : MonoBehaviour
     
     [Tooltip("Deposit tray containing pieces to allocate")]
     public DepositTrayController depositTray;
+    
+    [Tooltip("ScoreManagerController to add scores when orders complete")]
+    public ScoreManagerController scoreManager;
 
     [System.Serializable] public class PieceAllocatedEvent : UnityEvent<CustomerOrder, OrderItem, TrayPiece> { }
     [System.Serializable] public class PieceUnmatchedEvent : UnityEvent<TrayPiece> { }
@@ -33,6 +36,9 @@ public class AllocationService : MonoBehaviour
 
     [Header("Debug")]
     public bool logAllocations = true;
+    
+    // Track allocated pieces per order for score calculation
+    private Dictionary<CustomerOrder, List<TrayPiece>> orderAllocatedPieces = new Dictionary<CustomerOrder, List<TrayPiece>>();
 
     /// <summary>
     /// Auto-find dependencies if not assigned
@@ -54,6 +60,15 @@ public class AllocationService : MonoBehaviour
             if (depositTray == null)
             {
                 Debug.LogWarning("[AllocationService] DepositTrayController not found! Allocation will not work.");
+            }
+        }
+        
+        if (scoreManager == null)
+        {
+            scoreManager = FindObjectOfType<ScoreManagerController>();
+            if (scoreManager == null)
+            {
+                Debug.LogWarning("[AllocationService] ScoreManagerController not found! Scores will not be awarded.");
             }
         }
     }
@@ -116,13 +131,40 @@ public class AllocationService : MonoBehaviour
                     
                     OnPieceAllocated?.Invoke(order, matchingItem, piece);
                     
+                    // Track allocated piece for score calculation
+                    if (!orderAllocatedPieces.ContainsKey(order))
+                    {
+                        orderAllocatedPieces[order] = new List<TrayPiece>();
+                    }
+                    orderAllocatedPieces[order].Add(piece);
+                    
                     // Check if this allocation completed the order
                     if (orderManager.IsOrderComplete(order))
                     {
                         summary.completedOrders.Add(order);
                         
+                        // Calculate score using original formula: i * (x + (t * s))
+                        if (orderAllocatedPieces.ContainsKey(order))
+                        {
+                            int orderScore = ScoreCalculator.CalculateOrderScore(order, orderAllocatedPieces[order]);
+                            
+                            // Add score to score manager
+                            if (scoreManager != null)
+                            {
+                                scoreManager.AddScore(orderScore);
+                            }
+                            
+                            if (logAllocations)
+                            {
+                                Debug.Log($"[AllocationService] Order \"{order.customerName}\" completed! Score: {orderScore}");
+                            }
+                        }
+                        
                         // Complete the order (clears slot and moves to completed list)
                         orderManager.CompleteOrder(order);
+                        
+                        // Remove from tracking dictionary
+                        orderAllocatedPieces.Remove(order);
                         
                         // Trigger event for VFX/SFX
                         OnOrderCompleted?.Invoke(order);
