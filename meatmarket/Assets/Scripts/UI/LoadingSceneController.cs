@@ -60,15 +60,32 @@ public class LoadingSceneController : MonoBehaviour
         loadingOperation = SceneManager.LoadSceneAsync(sceneName);
         loadingOperation.allowSceneActivation = false; // We'll activate manually
         
-        // Wait until scene is loaded (90% complete)
-        while (loadingOperation.progress < 0.9f)
+        // Continuously update progress until ready to activate
+        // Note: progress only goes 0-0.9 when allowSceneActivation is false
+        while (!loadingOperation.isDone)
         {
-            // Update loading text with progress if desired
+            // Calculate progress percentage (0-90% range, then we'll show 100% when ready)
+            float rawProgress = loadingOperation.progress;
+            int progressPercent = Mathf.RoundToInt(rawProgress * 100f);
+            
+            // Update loading text with progress
             if (loadingText != null)
             {
-                int progress = Mathf.RoundToInt(loadingOperation.progress * 100f);
-                loadingText.text = $"{loadingMessage} {progress}%";
+                loadingText.text = $"{loadingMessage} {progressPercent}%";
             }
+            
+            // When progress reaches 0.9 (90%), the scene is ready but not activated
+            // We'll show 90% and then wait for minimum time before activating
+            if (rawProgress >= 0.9f)
+            {
+                // Show 90% while waiting
+                if (loadingText != null)
+                {
+                    loadingText.text = $"{loadingMessage} 90%";
+                }
+                break;
+            }
+            
             yield return null;
         }
         
@@ -76,7 +93,26 @@ public class LoadingSceneController : MonoBehaviour
         float elapsedTime = Time.time - loadStartTime;
         if (elapsedTime < minimumLoadTime)
         {
-            yield return new WaitForSeconds(minimumLoadTime - elapsedTime);
+            // Show progress while waiting for minimum time
+            float waitTime = minimumLoadTime - elapsedTime;
+            float waitStart = Time.time;
+            while (Time.time - waitStart < waitTime)
+            {
+                // Interpolate from 90% to 99% during wait
+                float waitProgress = (Time.time - waitStart) / waitTime;
+                int displayPercent = Mathf.RoundToInt(90f + (waitProgress * 9f));
+                if (loadingText != null)
+                {
+                    loadingText.text = $"{loadingMessage} {displayPercent}%";
+                }
+                yield return null;
+            }
+        }
+        
+        // Show 100% before activating
+        if (loadingText != null)
+        {
+            loadingText.text = $"{loadingMessage} 100%";
         }
         
         // Small additional delay for smooth transition

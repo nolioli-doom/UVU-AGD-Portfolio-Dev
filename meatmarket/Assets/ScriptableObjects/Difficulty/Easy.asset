@@ -59,7 +59,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  timeLimitSecondsRange: {x: 30, y: 60}
+  timeLimitSecondsRange: {x: 45, y: 60}
   rareSpeciesFavor: 0.3
   softSpeciesCapBuffer: 2
-  requireExtraBodyChance: 0.3
+  dayTimerDuration: 300
