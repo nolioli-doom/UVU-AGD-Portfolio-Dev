@@ -355,6 +355,13 @@ public class PurchaseUI : MonoBehaviour
         SetEnabled(ovenButton, false);
         SetEnabled(shockButton, false);
         SetBuyOptionsInteractable(false);
+        
+        // Lock the tray handle via OvenController to prevent pulling out the tray during plushie spawn
+        if (oven != null)
+        {
+            oven.SetTrayLocked(true);
+            Debug.Log("[PurchaseUI] Tray locked during respawn");
+        }
     }
 
     private void EndGlobalLock()
@@ -363,6 +370,13 @@ public class PurchaseUI : MonoBehaviour
         SetEnabled(handleButton, true);
         SetEnabled(shockButton, true);
         // ovenButton gets re-enabled in ExitBlankReady()
+        
+        // Unlock the tray handle now that plushie has spawned
+        if (oven != null)
+        {
+            oven.SetTrayLocked(false);
+            Debug.Log("[PurchaseUI] Tray unlocked after respawn complete");
+        }
     }
 
     private void SetEnabled(MonoBehaviour comp, bool enable)

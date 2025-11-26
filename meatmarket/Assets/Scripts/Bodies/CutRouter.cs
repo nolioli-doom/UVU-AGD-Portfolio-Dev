@@ -8,6 +8,13 @@ public class CutRouter : MonoBehaviour
     [Header("Body Configuration")]
     [SerializeField] private string bodyType = "CAT";
 
+    [Header("Impact VFX (Shared for all CutZones)")]
+    [Tooltip("Impact effect prefabs to spawn on first click for all child CutZones. If not set on individual CutZones, they will use these. If multiple prefabs are provided, one will be randomly selected.")]
+    public GameObject[] sharedImpactVFXPrefabs;
+
+    [Tooltip("Parent transform for spawned VFX (optional). If null, VFX will be spawned at root level.")]
+    public Transform sharedVFXParent;
+
     [Header("Routed Events (wire these ONCE)")]
     public CutEvent OnAnyCutEnter;
     public CutEvent OnPerfectCutEnter;

@@ -50,7 +50,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  timeLimitSecondsRange: {x: 35, y: 120}
+  timeLimitSecondsRange: {x: 45, y: 120}
   rareSpeciesFavor: 0.35
   softSpeciesCapBuffer: 3
   dayTimerDuration: 360

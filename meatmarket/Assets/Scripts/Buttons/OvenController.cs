@@ -270,7 +270,11 @@ public class OvenController : MonoBehaviour
         SetTrayLocked(false);
     }
 
-    private void SetTrayLocked(bool locked)
+    /// <summary>
+    /// Public method to lock/unlock the tray handle.
+    /// Used by PurchaseUI during plushie respawn to prevent premature tray movement.
+    /// </summary>
+    public void SetTrayLocked(bool locked)
     {
         if (handleColliderToDisable != null) handleColliderToDisable.enabled = !locked;
         if (handleRaycastButton != null) handleRaycastButton.enabled = !locked;

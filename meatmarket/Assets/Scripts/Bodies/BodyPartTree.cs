@@ -15,6 +15,9 @@ public class BodyPartTree : MonoBehaviour
     [Header("Connections (Auto-Found if not assigned)")]
     [Tooltip("Leave empty to auto-find in scene at runtime")]
     public DepositTrayController depositTray;
+    
+    [Tooltip("Optional: Visual dismemberment component (auto-found if not assigned)")]
+    public PlushieDismembermentVisualizer dismembermentVisualizer;
 
     [Header("Debug")]
     public bool logSegmentStates = true;
@@ -39,6 +42,12 @@ public class BodyPartTree : MonoBehaviour
             {
                 Debug.Log("[BodyPartTree] Auto-found DepositTrayController in scene");
             }
+        }
+
+        // Auto-find dismemberment visualizer if not assigned (optional component)
+        if (dismembermentVisualizer == null)
+        {
+            dismembermentVisualizer = GetComponent<PlushieDismembermentVisualizer>();
         }
 
         BuildVirtualHierarchy();
@@ -329,6 +338,12 @@ public class BodyPartTree : MonoBehaviour
 
         // Mark segment as already deposited (prevent double-deposit)
         segment.hasBeenDeposited = true;
+
+        // Notify dismemberment visualizer to disable the mesh (if present)
+        if (dismembermentVisualizer != null)
+        {
+            dismembermentVisualizer.OnSegmentIsolated(segment.segmentType);
+        }
 
         // Optionally clear stored history for this segment to free memory
         if (segmentCutHistory.ContainsKey(segment.segmentType))

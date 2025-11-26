@@ -215,7 +215,12 @@ public class OrderGenerator : MonoBehaviour
         };
         
         if (rng.NextDouble() < 0.55 && valid.Any(limbParts.Contains))
-            return limbParts.First(p => valid.Contains(p));
+        {
+            // Filter to only limb parts that are valid for this species, then randomly pick one
+            var validLimbParts = limbParts.Where(p => valid.Contains(p)).ToList();
+            if (validLimbParts.Count > 0)
+                return validLimbParts[rng.Next(validLimbParts.Count)];
+        }
         
         return valid[rng.Next(valid.Count)];
     }

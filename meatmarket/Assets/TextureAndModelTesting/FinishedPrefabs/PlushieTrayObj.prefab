@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1632278227738147411}
+  - component: {fileID: 6184381345833472476}
   m_Layer: 0
   m_Name: PlushieTrayObj
   m_TagString: Untagged
@@ -26,7 +27,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3302766316135868496}
@@ -37,6 +38,28 @@ Transform:
   - {fileID: 7531167228457267848}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &6184381345833472476
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9028236457864317133}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 5ba19fcf2dc7d446d97311edbfdb71eb, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &2792732066162929256
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -228,8 +251,38 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2412137565880225051, guid: 1a0cdb3a9e8ada54aaee7f3194e51899, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1678757624402094294}
   m_SourcePrefab: {fileID: 100100000, guid: 1a0cdb3a9e8ada54aaee7f3194e51899, type: 3}
+--- !u!1 &1565556895506931722 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2412137565880225051, guid: 1a0cdb3a9e8ada54aaee7f3194e51899, type: 3}
+  m_PrefabInstance: {fileID: 3801139127356763409}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &1678757624402094294
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1565556895506931722}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 5664f0be9b9e145cabf6d6420ba4384b, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!4 &3696015590386649850 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 1a0cdb3a9e8ada54aaee7f3194e51899, type: 3}
@@ -360,8 +413,38 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: -7704396338530738035, guid: 87d0866b0e6011d4caf2b2d0e4749170, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4134744369573121930}
   m_SourcePrefab: {fileID: 100100000, guid: 87d0866b0e6011d4caf2b2d0e4749170, type: 3}
+--- !u!1 &5594322252784501227 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -7704396338530738035, guid: 87d0866b0e6011d4caf2b2d0e4749170, type: 3}
+  m_PrefabInstance: {fileID: 6392712522877018470}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &4134744369573121930
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5594322252784501227}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 5664f0be9b9e145cabf6d6420ba4384b, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!4 &6862856181786592909 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 87d0866b0e6011d4caf2b2d0e4749170, type: 3}
