@@ -17,6 +17,18 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6952410071745951016, guid: afcf0806208194e58a752aae0dfcd0aa, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 35
+      objectReference: {fileID: 0}
+    - target: {fileID: 6952410071745951016, guid: afcf0806208194e58a752aae0dfcd0aa, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 35
+      objectReference: {fileID: 0}
+    - target: {fileID: 6952410071745951016, guid: afcf0806208194e58a752aae0dfcd0aa, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 35
+      objectReference: {fileID: 0}
+    - target: {fileID: 6952410071745951016, guid: afcf0806208194e58a752aae0dfcd0aa, type: 3}
       propertyPath: m_LocalPosition.x
       value: -3.579
       objectReference: {fileID: 0}
@@ -62,7 +74,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7723740102214791058, guid: afcf0806208194e58a752aae0dfcd0aa, type: 3}
       propertyPath: m_Name
-      value: allPlushies Variant 1
+      value: dogFab
       objectReference: {fileID: 0}
     - target: {fileID: 7779980450634541498, guid: afcf0806208194e58a752aae0dfcd0aa, type: 3}
       propertyPath: m_IsActive
