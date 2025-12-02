@@ -331,7 +331,16 @@ public class PurchaseUI : MonoBehaviour
         GameObject prefab = plushiePrefabs[prefabIndex];
         if (prefab == null) return;
 
+        // Instantiate as child of slot, then normalize local transform
         GameObject go = Instantiate(prefab, plushieSlot);
+
+        // Match MorgueController.SpawnPlushie behaviour so bought plushies
+        // use consistent scale/position regardless of prefab authoring scale
+        Transform t = go.transform;
+        t.localPosition = Vector3.zero;
+        t.localRotation = prefab.transform.rotation; // preserve prefab's intended rotation
+        t.localScale = Vector3.one;
+
         var plush = go.GetComponent<PlushieBehaviour>();
         if (plush != null)
         {
