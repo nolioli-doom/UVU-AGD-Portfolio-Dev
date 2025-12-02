@@ -53,4 +53,4 @@ MonoBehaviour:
   timeLimitSecondsRange: {x: 50, y: 90}
   rareSpeciesFavor: 0.4
   softSpeciesCapBuffer: 2
-  dayTimerDuration: 360
+  dayTimerDuration: 300

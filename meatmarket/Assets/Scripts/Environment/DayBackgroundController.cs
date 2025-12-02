@@ -76,7 +76,7 @@ public class DayBackgroundController : MonoBehaviour
         // Auto-find DayIndexSO if not assigned
         if (dayIndexSO == null)
         {
-            dayIndexSO = Resources.FindObjectsOfTypeAll<DayIndexSO>().FirstOrDefault();
+            dayIndexSO = DayIndexSO.Instance;
             if (dayIndexSO == null)
             {
                 Debug.LogWarning("[DayBackgroundController] DayIndexSO not found! Background color will not update. Please create one and assign it in the Inspector.");

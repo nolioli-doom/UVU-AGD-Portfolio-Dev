@@ -52,7 +52,7 @@ public class DayFinishedScreen : MonoBehaviour
         // Auto-find dependencies
         if (dayIndexSO == null)
         {
-            dayIndexSO = Resources.FindObjectsOfTypeAll<DayIndexSO>().FirstOrDefault();
+            dayIndexSO = DayIndexSO.Instance;
         }
         
         if (dayFinishedManager == null)

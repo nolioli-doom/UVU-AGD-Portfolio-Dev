@@ -38,10 +38,10 @@ public class MainMenuController : MonoBehaviour
     
     void Start()
     {
-        // Auto-find DayIndexSO if not assigned
+        // Auto-find DayIndexSO if not assigned (via singleton Instance to keep it alive across scenes)
         if (dayIndexSO == null)
         {
-            dayIndexSO = Resources.FindObjectsOfTypeAll<DayIndexSO>().FirstOrDefault();
+            dayIndexSO = DayIndexSO.Instance;
             if (dayIndexSO == null && logActions)
             {
                 Debug.LogWarning("[MainMenuController] DayIndexSO not found! Please create one and assign it in the Inspector.");

@@ -183,20 +183,24 @@ public class PinnedOrdersDisplay : MonoBehaviour
             if (itemsText != null)
             {
                 var sb = new StringBuilder();
-                sb.AppendLine("Items:");
-                
+
                 foreach (var item in order.items)
                 {
-                    string checkmark = item.IsComplete ? "✓" : "○";
-                    string progress = $"{item.currentQuantity}/{item.quantity}";
+                    // Skip fully completed items so their line disappears once satisfied
+                    if (item.IsComplete)
+                        continue;
+
+                    // We no longer show quantity progress (0/1 etc.),
+                    // just a simple bullet with the colored part name.
+                    string checkmark = "•";
                     string partTypeDisplay = item.partType.ToString().Replace("_", " ");
                     
                     // Get species color
                     Color speciesColor = GetSpeciesColor(item.species);
                     string colorHex = ColorUtility.ToHtmlStringRGB(speciesColor);
                     
-                    // Format: "○ 0/1 Hand" with Hand colored by species (red/green/blue)
-                    string itemText = $"{checkmark} {progress} <color=#{colorHex}>{partTypeDisplay}</color>";
+                    // Format: "• Hand" with Hand colored by species (red/green/blue)
+                    string itemText = $"{checkmark} <color=#{colorHex}>{partTypeDisplay}</color>";
                     
                     sb.AppendLine(itemText);
                 }
